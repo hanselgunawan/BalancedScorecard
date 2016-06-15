@@ -1,0 +1,202 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+
+namespace Balanced_Scorecard
+{
+    public partial class add_group : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                ((Label)Master.FindControl("LabelUsername")).Text = Session["user_name"].ToString();
+                var period_id = Request.QueryString["period_id"];
+                var page = Request.QueryString["page"];
+
+                //link untuk breadcrumb
+                financial_measures_breadcrumb.Attributes.Add("a href", "financial_scorecard.aspx?id=" + period_id + "");
+
+                if (Session["user_name"] == null)
+                {
+                    Response.Redirect("~/index.aspx");
+                }
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    string string_select_period = "SELECT * FROM BSC_Period WHERE Period_ID=" + period_id + "";
+                    string string_select_group_name = "SELECT Group_Name FROM ScorecardGroup";//ambil nama-nama Group
+                    string string_select_review = "SELECT DISTINCT Review_Name FROM ScorecardReview";//ambil nama-nama Review
+                    SqlCommand sql_select_period = new SqlCommand(string_select_period, conn);
+                    SqlCommand sql_select_group_name = new SqlCommand(string_select_group_name, conn);
+                    SqlCommand sql_select_review = new SqlCommand(string_select_review, conn);
+                    conn.Open();
+                    using (SqlDataReader oReader = sql_select_period.ExecuteReader())
+                    {
+                        if (oReader.HasRows)
+                        {
+                            while (oReader.Read())
+                            {
+                                string start_date_formatted, end_date_formatted;
+                                DateTime start_date = Convert.ToDateTime(oReader["Start_Period"]);
+                                DateTime end_date = Convert.ToDateTime(oReader["End_Period"]);
+                                start_date_formatted = start_date.ToString("MMM yyyy");
+                                end_date_formatted = end_date.ToString("MMM yyyy");
+                                LabelStartPeriod.InnerText = start_date_formatted;
+                                LabelEndPeriod.InnerText = end_date_formatted;
+                            }
+                            cancel_add_new_group.Attributes.Add("a href", "financial_scorecard.aspx?page=" + page + "&id=" + period_id + "");
+                        }
+                        else
+                        {
+                            LabelStartPeriod.InnerText = "No Period";
+                            LabelEndPeriod.InnerText = "No Period";
+                            SpanAddGroup.Attributes.Add("class", "btn btn-add-group btn-add-group-container add-button disabled");
+                            cancel_add_new_group.Attributes.Add("a href", "financial_scorecard.aspx?page=1&id=1");
+                        }
+                    }
+
+                    using (SqlDataReader GroupReader = sql_select_group_name.ExecuteReader())
+                    {
+                        if (GroupReader.HasRows)
+                        {
+                            while (GroupReader.Read())
+                            {
+                                DropDownListGroup.Items.Add(GroupReader["Group_Name"].ToString());
+                            }
+                        }
+                        else
+                        {
+                            DropDownListGroup.Items.Add("No Group Found");
+                        }
+                    }
+
+                    using (SqlDataReader ReviewReader = sql_select_review.ExecuteReader())
+                    {
+                        if (ReviewReader.HasRows)
+                        {
+                            while (ReviewReader.Read())
+                            {
+                                DropDownListReview.Items.Add(ReviewReader["Review_Name"].ToString());
+                            }
+                        }
+                        else
+                        {
+                            DropDownListReview.Items.Add("No Review Found");
+                        }
+                    }
+
+                    conn.Close();
+                }
+            }
+        }
+
+        protected void OnDropdownChanged(object sender, EventArgs e)
+        {
+            var period_id = Request.QueryString["period_id"];
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                string check_if_group_name_exist = "SELECT FinancialHeader_Group FROM FinancialMeasures_Header WHERE Period_ID=" + period_id
+                                                 + " AND FinancialHeader_Group='" + DropDownListGroup.SelectedValue + "'";
+                SqlCommand sql_check_group_name = new SqlCommand(check_if_group_name_exist, conn);
+                conn.Open();
+                using (SqlDataReader GroupNameReader = sql_check_group_name.ExecuteReader())
+                {
+                    if (GroupNameReader.HasRows)
+                        {
+                            check_group_name.Attributes.Add("style", "visibility:visible; margin-bottom:0px !important; margin-top:5px !important; color:red; font-weight:bold");
+                            SpanAddGroup.Attributes.Add("class", "btn btn-add-group btn-add-group-container add-button disabled");
+                        }
+                        else
+                        {
+                            check_group_name.Attributes.Add("style", "visibility:hidden; margin-bottom:0px !important; margin-top:-18px !important");
+                            SpanAddGroup.Attributes.Add("class", "btn btn-add-group btn-add-group-container add-button");
+                        }
+                    }
+                conn.Close();
+            }
+        }
+
+        protected void OnClickSubmit(object sender, EventArgs e)
+        {
+            var period_id = Request.QueryString["period_id"];
+            var page = Request.QueryString["page"];
+            bool value_exist = true;
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                //cek apakah Financial Group uda ada di DB atau belum
+                string check_if_group_name_exist = "SELECT FinancialHeader_Group FROM FinancialMeasures_Header "
+                                                 + "WHERE Period_ID="+period_id+" AND data_status='exist' AND "
+                                                 + "FinancialHeader_Group='"+DropDownListGroup.SelectedValue+"'";
+                SqlCommand sql_check_group_name = new SqlCommand(check_if_group_name_exist, conn);
+                conn.Open();
+                using (SqlDataReader GroupNameReader = sql_check_group_name.ExecuteReader())
+                {
+                    if (GroupNameReader.HasRows)
+                    {
+                        value_exist = true;
+                    }
+                    else
+                    {
+                        value_exist = false;
+                    }
+                }
+                conn.Close();
+            }
+
+            if (value_exist == false)
+            {
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    string string_insert_new_group = "INSERT INTO FinancialMeasures_Header VALUES(@group_name, @stretch_rating, "
+                                                   + "@review, @user_create, @user_update, @period_id, 'exist', "
+                                                   + "@individual_stretch_rating, @date_create, @date_update, @review_id)";
+                    string user_create, date_create, user_update, date_update;
+                    SqlCommand sql_insert_group = new SqlCommand(string_insert_new_group, conn);
+                    conn.Open();
+
+                    user_create = Session["user_name"].ToString();
+                    user_update = Session["user_name"].ToString();
+                    date_create = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+                    sql_insert_group.Parameters.AddWithValue("@group_name", DropDownListGroup.SelectedValue);
+                    sql_insert_group.Parameters.AddWithValue("@stretch_rating", Math.Round(Convert.ToDouble(TextBoxStretch.Value),2));
+                    sql_insert_group.Parameters.AddWithValue("@review", DropDownListReview.SelectedValue);
+                    sql_insert_group.Parameters.AddWithValue("@user_create", user_create);
+                    sql_insert_group.Parameters.AddWithValue("@user_update", user_update);
+                    sql_insert_group.Parameters.AddWithValue("@period_id", period_id);
+                    sql_insert_group.Parameters.AddWithValue("@individual_stretch_rating",Math.Round(Convert.ToDouble(TextBoxStretchIndividual.Value),2));
+                    sql_insert_group.Parameters.AddWithValue("@date_create", date_create);
+                    sql_insert_group.Parameters.AddWithValue("@date_update", date_update);
+                    if (DropDownListReview.SelectedIndex == 0)
+                    {
+                        sql_insert_group.Parameters.AddWithValue("@review_id", 1);
+
+                    }
+                    else if (DropDownListReview.SelectedIndex == 1)
+                    {
+                        sql_insert_group.Parameters.AddWithValue("@review_id", 5);
+
+                    }
+                    else if (DropDownListReview.SelectedIndex == 2)
+                    {
+                        sql_insert_group.Parameters.AddWithValue("@review_id", 7);
+
+                    }
+                    sql_insert_group.ExecuteNonQuery();
+                    conn.Close();
+                    ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('New Group Added!'); window.location='" + "financial_scorecard.aspx?page=" + page + "&id=" + period_id + "';", true);
+                }
+            }
+        }
+    }
+}

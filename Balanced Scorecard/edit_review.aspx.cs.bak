@@ -1,0 +1,552 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+using System.Net.Mail;
+
+namespace Balanced_Scorecard
+{
+    public partial class edit_review : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                if (Session["user_name"] == null)
+                {
+                    Response.Redirect("~/index.aspx");
+                }
+                ((Label)Master.FindControl("LabelUsername")).Text = Session["user_name"].ToString();
+                var review_id = Request.QueryString["review_id"];
+                var page = Request.QueryString["page"];
+                string string_select_scorecard_review = "SELECT * FROM ScorecardReview WHERE Review_ID=" + review_id + "";
+                set_review_breadcrumb.Attributes.Add("href", "set_review_month.aspx?page=" + page + "");
+                cancel_edit_review_month.Attributes.Add("href", "set_review_month.aspx?page=" + page + "");
+
+                review_error_message.Attributes.Add("style", "visibility:hidden; color:red; font-weight:bold; padding-bottom:-20px; margin-top:-25px;");
+
+                //memberikan value kepada Drop Down List Month
+                DropDownListMonth.Items.Add("January");
+                DropDownListMonth.Items.Add("February");
+                DropDownListMonth.Items.Add("March");
+                DropDownListMonth.Items.Add("April");
+                DropDownListMonth.Items.Add("May");
+                DropDownListMonth.Items.Add("June");
+                DropDownListMonth.Items.Add("July");
+                DropDownListMonth.Items.Add("August");
+                DropDownListMonth.Items.Add("September");
+                DropDownListMonth.Items.Add("October");
+                DropDownListMonth.Items.Add("November");
+                DropDownListMonth.Items.Add("December");
+
+                //memberikan value kepada Drop Down Reviewable
+                for (int i = 0; i <= 12; i++)
+                {
+                    DropDownListReviewable.Items.Add("" + i + "");
+                }
+
+                    //memberikan value kepada Drop Down List Status
+                    DropDownListStatus.Items.Add("Active");
+                DropDownListStatus.Items.Add("Non-Active");
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_string_select_scorecard_review = new SqlCommand(string_select_scorecard_review, conn);
+                    using (SqlDataReader ReviewReader = sql_string_select_scorecard_review.ExecuteReader())
+                    {
+                        if (ReviewReader.HasRows)
+                        {
+                            while (ReviewReader.Read())
+                            {
+                                if (ReviewReader["Review_Status"].ToString() == "Active")
+                                {
+                                    DropDownListMonth.Enabled = false;
+                                }
+                                LabelReviewName.InnerText = ReviewReader["Review_Name"].ToString();
+                                DropDownListMonth.SelectedValue = ReviewReader["Review_Month"].ToString();
+                                DropDownListStatus.SelectedValue = ReviewReader["Review_Status"].ToString();
+                                DropDownListReviewable.SelectedValue = ReviewReader["reviewable_month"].ToString();
+                            }
+                        }
+                        else
+                        {
+                            LabelReviewName.InnerText = "Review Not Found";
+                            DropDownListMonth.SelectedValue = "January";
+                            DropDownListStatus.SelectedValue = "Non-Active";
+                            DropDownListMonth.Enabled = false;
+                            DropDownListStatus.Enabled = false;
+                            ButtonEdit.Enabled = false;
+                            SpanEditGroup.Attributes.Add("disabled", "true");
+                        }
+                        ReviewReader.Dispose();
+                        ReviewReader.Close();
+                    }
+                    conn.Close();
+                }
+            }
+        }
+
+        protected void OnMonthChanged(object sender, EventArgs e)
+        {
+            var review_id = Request.QueryString["review_id"];
+            var page = Request.QueryString["page"];
+            int selected_month = MonthCharToInt(DropDownListMonth.SelectedValue);
+            int current_month = DateTime.Now.Month;
+
+            if (selected_month < current_month && DropDownListStatus.SelectedValue == "Active")
+            {
+                check_review_month.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+            }
+            else
+            {
+                bool month_exist = false;
+                string review_name = "";
+                string get_review_name = "SELECT Review_Name FROM ScorecardReview WHERE Review_ID=" + review_id + "";
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_get_review_name = new SqlCommand(get_review_name, conn);
+                    review_name = sql_get_review_name.ExecuteScalar().ToString();
+
+                    string string_check_month = "SELECT Review_Month FROM ScorecardReview WHERE Review_Month='" + DropDownListMonth.SelectedValue + "' "
+                                               + "AND Review_Name ='" + review_name + "' AND Review_ID<>" + review_id + "";
+                    SqlCommand sql_string_check_month = new SqlCommand(string_check_month, conn);
+                    using (SqlDataReader MonthReader = sql_string_check_month.ExecuteReader())
+                    {
+                        while (MonthReader.Read())
+                        {
+                            if (MonthReader["Review_Month"].ToString() == DropDownListMonth.SelectedValue)
+                            {
+                                month_exist = true;
+                            }
+                        }
+                        MonthReader.Dispose();
+                        MonthReader.Close();
+                    }
+                    conn.Close();
+                }
+                check_review_month.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+                if (month_exist == true)
+                {
+                    check_review_month_exist.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+                }
+                else
+                {
+                    check_review_month_exist.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+                }
+            }
+        }
+
+        protected void OnReviewableChanged(object sender, EventArgs e)
+        {
+            var review_id = Request.QueryString["review_id"];
+            int month_num, selected_month_num;
+            string string_select_month_num = "SELECT month_num FROM ScorecardReview WHERE Review_ID=" + review_id + "";
+            selected_month_num = int.Parse(DropDownListReviewable.SelectedValue);
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                conn.Open();
+                SqlCommand sql_select_month_num = new SqlCommand(string_select_month_num, conn);
+                month_num = int.Parse(sql_select_month_num.ExecuteScalar().ToString());
+                conn.Close();
+            }
+
+            if ((DropDownListMonth.SelectedIndex + 1) - selected_month_num <= 0)
+            {
+                review_error_message.Attributes.Add("style", "visibility:visible; width:200px; padding-bottom:20px; margin-top:2px; color:red; font-weight:bold");
+                SpanEditGroup.Attributes.Add("class", "btn btn-add-group btn-add-group-container edit-button disabled");
+            }
+            /*else if((DropDownListMonth.SelectedIndex + 1) - selected_month_num <= 0)
+            {
+                review_error_message.Attributes.Add("style", "visibility:visible; width:200px; padding-bottom:20px; margin-top:2px; color:red; font-weight:bold");
+                SpanEditGroup.Attributes.Add("class", "btn btn-add-group btn-add-group-container edit-button disabled");
+            }*/
+            else
+            {
+                review_error_message.Attributes.Add("style", "visibility:hidden; color:red; font-weight:bold; padding-bottom:-20px; margin-top:-25px");
+                SpanEditGroup.Attributes.Add("class", "btn btn-success btn-add-group btn-add-group-container edit-button");
+            }
+        }
+
+        protected void OnStatusChanged(object sender, EventArgs e)
+        {
+            var review_id = Request.QueryString["review_id"];
+            int selected_month = MonthCharToInt(DropDownListMonth.SelectedValue);
+            int current_month = DateTime.Now.Month;
+            string string_select_active_review = "SELECT Review_Status FROM ScorecardReview "
+                                                + "WHERE Review_Name='" + LabelReviewName.InnerText + "' AND Review_Status='Active' "
+                                                + "AND Review_ID<>" + review_id + "";
+
+            if (selected_month < current_month && DropDownListStatus.SelectedValue == "Active")
+            {
+                check_review_month.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+            }
+            else if (selected_month < current_month && DropDownListStatus.SelectedValue == "Non-Active")
+            {
+                check_review_month.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+            }
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                conn.Open();
+                SqlCommand sql_string_select_active_review = new SqlCommand(string_select_active_review, conn);
+                using (SqlDataReader StatusReader = sql_string_select_active_review.ExecuteReader())
+                {
+                    if (StatusReader.HasRows && DropDownListStatus.SelectedValue=="Active")
+                    {
+                        check_review_status.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+                    }
+                    else if (StatusReader.HasRows && DropDownListStatus.SelectedValue == "Non-Active")
+                    {
+                        check_review_status.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+                    }
+                    StatusReader.Dispose();
+                    StatusReader.Close();
+                }
+                conn.Close();
+            }
+
+        }
+
+        protected void OnClickEdit(object sender, EventArgs e)
+        {
+            var review_id = Request.QueryString["review_id"];
+            var page = Request.QueryString["page"];
+            int selected_month = MonthCharToInt(DropDownListMonth.SelectedValue);
+            int selected_reviewable = int.Parse(DropDownListReviewable.SelectedValue);
+            int current_month = DateTime.Now.Month;
+            bool period_active = true;
+            string string_update_review_month = "UPDATE ScorecardReview SET Review_Month=@new_month, Review_Status=@new_status,"
+                                               +"user_update=@user_update, date_update=@date_update, month_num=@new_month_num, reviewable_month=@reviewable_month "
+                                               + "WHERE Review_ID=" + review_id + "";
+            string string_select_review_status = "SELECT Review_Status FROM ScorecardReview WHERE Review_ID=" + review_id + "";
+            string get_user_email = "SELECT empEmail FROM ScorecardUser WHERE EmpId=" + Session["user_nik"] + "";
+            string date_update, user_update, review_status, user_email;
+            SqlConnection conn_status = new SqlConnection(str_connect);
+            conn_status.Open();
+            SqlCommand sql_review_status = new SqlCommand(string_select_review_status, conn_status);
+            review_status = sql_review_status.ExecuteScalar().ToString();
+            conn_status.Close();
+
+            user_update = Session["user_name"].ToString();
+            date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            if (review_status == "Active")
+            {
+                string update_review_month = "UPDATE ScorecardReview SET Review_Month=@new_month, Review_Status=@new_status, "
+                                           + "user_update=@user_update, date_update=@date_update, reviewable_month=@reviewable_month WHERE Review_ID=" + review_id + "";
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_get_email = new SqlCommand(get_user_email, conn);
+                    user_email = (string)sql_get_email.ExecuteScalar();
+                    SqlCommand sql_update_review_month = new SqlCommand(update_review_month, conn);
+                    sql_update_review_month.Parameters.AddWithValue("@new_month", DropDownListMonth.SelectedValue);
+                    sql_update_review_month.Parameters.AddWithValue("@new_status", DropDownListStatus.SelectedValue);
+                    sql_update_review_month.Parameters.AddWithValue("@user_update", user_update);
+                    sql_update_review_month.Parameters.AddWithValue("@date_update", date_update);
+                    sql_update_review_month.Parameters.AddWithValue("@reviewable_month", selected_reviewable);
+                    sql_update_review_month.ExecuteNonQuery();
+                    sendMailDeactiveReview(LabelReviewName.InnerText, DropDownListMonth.SelectedValue, DropDownListReviewable.SelectedValue, user_email);
+                    conn.Close();
+                    ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Review Status Changed Successfully'); window.location='" + Request.ApplicationPath + "/set_review_month.aspx?page=" + page + "';", true);
+                }
+            }
+            else
+            {
+                if (selected_month < current_month && DropDownListStatus.SelectedValue == "Active")
+                {
+                    check_review_month.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+                    check_review_month_exist.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+                }
+                else
+                {
+                    bool month_exist = false;
+                    string review_name = "";
+                    string get_review_name = "SELECT Review_Name FROM ScorecardReview WHERE Review_ID=" + review_id + "";
+                    using (SqlConnection conn = new SqlConnection(str_connect))
+                    {
+                        conn.Open();
+                        SqlCommand sql_get_review_name = new SqlCommand(get_review_name, conn);
+                        review_name = sql_get_review_name.ExecuteScalar().ToString();
+
+                        string string_check_month = "SELECT Review_Month FROM ScorecardReview WHERE Review_Month='" + DropDownListMonth.SelectedValue + "' "
+                                                   + "AND Review_Name ='" + review_name + "' AND Review_ID<>" + review_id + "";
+                        SqlCommand sql_string_check_month = new SqlCommand(string_check_month, conn);
+                        using (SqlDataReader MonthReader = sql_string_check_month.ExecuteReader())
+                        {
+                            while (MonthReader.Read())
+                            {
+                                if (MonthReader["Review_Month"].ToString() == DropDownListMonth.SelectedValue)
+                                {
+                                    month_exist = true;
+                                }
+                            }
+                            MonthReader.Dispose();
+                            MonthReader.Close();
+                        }
+                        conn.Close();
+                    }
+                    check_review_month.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+                    if (month_exist == true)
+                    {
+                        check_review_month_exist.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+                    }
+                    else
+                    {
+                        check_review_month_exist.Attributes.Add("style", "visibility:hidden; padding-bottom:0px; margin-top:0px");
+                        if (DropDownListStatus.SelectedValue == "Active" && selected_month < current_month)
+                        {
+                            check_month_pass.Attributes.Add("style", "color:red; font-weight:bold; visibility:visible; padding-bottom:20px; margin-top:3px");
+                        }
+                        else
+                        {
+                            using (SqlConnection conn = new SqlConnection(str_connect))
+                            {
+                                conn.Open();
+                                string string_select_active_period = "SELECT Review_Status FROM ScorecardReview WHERE Review_Status='Active' "
+                                                                    + "AND Review_ID<>" + review_id + " AND Review_Name='" + review_name + "'";
+                                SqlCommand sql_select_active_period = new SqlCommand(string_select_active_period, conn);
+                                using (SqlDataReader ActiveReader = sql_select_active_period.ExecuteReader())
+                                {
+                                    if (!ActiveReader.HasRows)
+                                    {
+                                        period_active = false;
+                                    }
+                                    ActiveReader.Dispose();
+                                    ActiveReader.Close();
+                                }
+
+                                if (period_active == false)
+                                {
+                                    SqlCommand sql_string_update_review_month = new SqlCommand(string_update_review_month, conn);
+                                    SqlCommand sql_get_email = new SqlCommand(get_user_email, conn);
+                                    user_email = (string)sql_get_email.ExecuteScalar();
+                                    sql_string_update_review_month.Parameters.AddWithValue("@new_month", DropDownListMonth.SelectedValue);
+                                    sql_string_update_review_month.Parameters.AddWithValue("@new_status", DropDownListStatus.SelectedValue);
+                                    sql_string_update_review_month.Parameters.AddWithValue("@user_update", user_update);
+                                    sql_string_update_review_month.Parameters.AddWithValue("@date_update", date_update);
+                                    sql_string_update_review_month.Parameters.AddWithValue("@new_month_num", selected_month);
+                                    sql_string_update_review_month.Parameters.AddWithValue("@reviewable_month", selected_reviewable);
+                                    sql_string_update_review_month.ExecuteNonQuery();
+                                    sendMailActiveReview(LabelReviewName.InnerText, DropDownListMonth.SelectedValue, DropDownListReviewable.SelectedValue, user_email);
+                                    ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Review Month Updated!'); window.location='" + Request.ApplicationPath + "/set_review_month.aspx?page=" + page + "';", true);
+                                }
+                                conn.Close();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void sendMailActiveReview(string review_name, string review_month, string reviewable, string sender_email)
+        {
+            string get_all_email_bsc_user = "SELECT DISTINCT empEmail FROM ScorecardUser WHERE empStatus='Yes' AND EmpId<>'" + Session["emp_nik"] + "'";
+            string diff_month;
+            int review_month_int, reviewable_int, diff_month_int;
+            review_month_int = MonthCharToInt(review_month);
+            reviewable_int = int.Parse(reviewable);
+            diff_month_int = review_month_int - reviewable_int;
+            diff_month = MonthIntToChar(diff_month_int);
+
+            SmtpClient mailclient = new SmtpClient();  //Karena FILE_LOCATION terjadi perubahan setiap di-klik, maka
+            using (MailMessage msg = new MailMessage())//harus pake USING untuk CLEAR semua Resource yang pernah dipake
+            {
+                /******************** SEND Email TO Users **************************************/
+                msg.Subject = "" + review_name + " BSC review period has been activated";
+
+                if (reviewable == "0")
+                {
+                    msg.Body = "Hello,<br/>"
+                         + "Review period for:<b> " + review_name + "</b> Balanced Scorecard has been <b>ACTIVATED</b>.<br/>"
+                         + "You can review your Individual Scorecard starts from <b>" + review_month + " 1st</b> until the end of <b>" + review_month + "</b>.<br/>"
+                         + "Thank you for your cooperation.<br/><br/>"
+                         + "Best Regards,<br/>"
+                         + "<b>" + Session["user_name"] + "</b>";
+                }
+                else
+                {
+                    msg.Body = "Hello,<br/>"
+                         + "Review period for:<b> " + review_name + "</b> Balanced Scorecard has been <b>ACTIVATED</b>.<br/>"
+                         + "You can review your Individual Scorecard starts from <b>" + diff_month + " 1st</b> until the end of <b>" + review_month + "</b>.<br/>"
+                         + "Thank you for your cooperation.<br/><br/>"
+                         + "Best Regards,<br/>"
+                         + "<b>" + Session["user_name"] + "</b>";
+                }
+
+                
+                msg.From = new MailAddress(sender_email);
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_get_all_email_bsc_user = new SqlCommand(get_all_email_bsc_user, conn);
+                    using (SqlDataReader EmailReader = sql_get_all_email_bsc_user.ExecuteReader())
+                    {
+                        while (EmailReader.Read())
+                        {
+                            string recipient_email;
+                            if (DBNull.Value.Equals(EmailReader["empEmail"]))
+                            {
+                                recipient_email = "unknown@email.com";
+                            }
+                            else
+                            {
+                                recipient_email = EmailReader["empEmail"].ToString();
+                            }
+                            msg.To.Add(new MailAddress(recipient_email));
+                        }
+                        EmailReader.Dispose();
+                        EmailReader.Close();
+                    }
+                    conn.Close();
+                }
+                msg.IsBodyHtml = true;
+                mailclient.Host = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
+                mailclient.Port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SMTPPort"]);
+                mailclient.Send(msg);
+            }
+        }
+
+        public void sendMailDeactiveReview(string review_name, string review_month, string reviewable, string sender_email)
+        {
+            string get_all_email_bsc_user = "SELECT DISTINCT empEmail FROM ScorecardUser WHERE empStatus='Yes' AND EmpId<>'" + Session["emp_nik"] + "'";
+            string diff_month;
+            int review_month_int, reviewable_int, diff_month_int;
+            review_month_int = MonthCharToInt(review_month);
+            reviewable_int = int.Parse(reviewable);
+            diff_month_int = review_month_int - reviewable_int;
+            diff_month = MonthIntToChar(diff_month_int);
+
+            SmtpClient mailclient = new SmtpClient();  //Karena FILE_LOCATION terjadi perubahan setiap di-klik, maka
+            using (MailMessage msg = new MailMessage())//harus pake USING untuk CLEAR semua Resource yang pernah dipake
+            {
+                /******************** SEND Email TO Users **************************************/
+                msg.Subject = "" + review_name + " BSC review period has been deactivated";
+
+                if (reviewable == "0")
+                {
+                    msg.Body = "Hello,<br/>"
+                         + "Review period for:<b> " + review_name + "</b> Balanced Scorecard has been <b>DEACTIVATED</b>.<br/>"
+                         + "Thank you for your cooperation.<br/><br/>"
+                         + "Best Regards,<br/>"
+                         + "<b>" + Session["user_name"] + "</b>";
+                }
+                else
+                {
+                    msg.Body = "Hello,<br/>"
+                         + "Review period for:<b> " + review_name + "</b> Balanced Scorecard has been <b>DEACTIVATED</b>.<br/>"
+                         + "Thank you for your cooperation.<br/><br/>"
+                         + "Best Regards,<br/>"
+                         + "<b>" + Session["user_name"] + "</b>";
+                }
+
+                msg.From = new MailAddress(sender_email);
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_get_all_email_bsc_user = new SqlCommand(get_all_email_bsc_user, conn);
+                    using (SqlDataReader EmailReader = sql_get_all_email_bsc_user.ExecuteReader())
+                    {
+                        while (EmailReader.Read())
+                        {
+                            string recipient_email;
+                            if (DBNull.Value.Equals(EmailReader["empEmail"]))
+                            {
+                                recipient_email = "unknown@email.com";
+                            }
+                            else
+                            {
+                                recipient_email = EmailReader["empEmail"].ToString();
+                            }
+                            msg.To.Add(new MailAddress(recipient_email));
+                        }
+                        EmailReader.Dispose();
+                        EmailReader.Close();
+                    }
+                    conn.Close();
+                }
+                msg.IsBodyHtml = true;
+                mailclient.Host = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
+                mailclient.Port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SMTPPort"]);
+                mailclient.Send(msg);
+            }
+        }
+
+        public int MonthCharToInt(string selected_month)
+        {
+            int int_month = 0;
+            switch (selected_month)
+            {
+                case "January":
+                    int_month = 1; break;
+                case "February":
+                    int_month = 2; break;
+                case "March":
+                    int_month = 3; break;
+                case "April":
+                    int_month = 4; break;
+                case "May":
+                    int_month = 5; break;
+                case "June":
+                    int_month = 6; break;
+                case "July":
+                    int_month = 7; break;
+                case "August":
+                    int_month = 8; break;
+                case "September":
+                    int_month = 9; break;
+                case "October":
+                    int_month = 10; break;
+                case "November":
+                    int_month = 11; break;
+                case "December":
+                    int_month = 12; break;
+            }
+            return int_month;
+        }
+
+        public string MonthIntToChar(int diff_month)
+        {
+            string diff_month_string = "";
+            switch (diff_month)
+            {
+                case 1:
+                    diff_month_string = "January"; break;
+                case 2:
+                    diff_month_string = "February"; break;
+                case 3:
+                    diff_month_string = "March"; break;
+                case 4:
+                    diff_month_string = "April"; break;
+                case 5:
+                    diff_month_string = "May"; break;
+                case 6:
+                    diff_month_string = "June"; break;
+                case 7:
+                    diff_month_string = "July"; break;
+                case 8:
+                    diff_month_string = "August"; break;
+                case 9:
+                    diff_month_string = "September"; break;
+                case 10:
+                    diff_month_string = "October"; break;
+                case 11:
+                    diff_month_string = "November"; break;
+                case 12:
+                    diff_month_string = "December"; break;
+            }
+            return diff_month_string;
+        }
+    }
+}

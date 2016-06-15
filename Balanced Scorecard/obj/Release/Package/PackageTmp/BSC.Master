@@ -1,0 +1,175 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="BSC.master.cs" Inherits="Balanced_Scorecard.BSC" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <meta http-equiv="Cache-Control" content="no-cache"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+
+    <title><asp:ContentPlaceHolder ID="title" runat="server">
+    </asp:ContentPlaceHolder></title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet"/>
+
+	<!-- Custom Style Sheet -->
+    <link href="css/style.css" rel="stylesheet"/>
+
+    <!-- Custom Sub-Menu CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet"/>
+    
+    <!-- Custom Fonts -->
+    <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.js"></script>
+
+    <!-- Pagination Jquery -->
+    <script src="js/jquery.twbsPagination.js"></script>
+
+    <!-- Script agar Date Picker dapat Cross-Browser -->
+    <script src="js/modernizr.js"></script>
+
+    <!-- Script untuk DatePicker -->
+    <script src="js/jquery.validate.js"></script>
+
+    <script>
+        Modernizr.load({
+            test: Modernizr.inputtypes.date,
+            nope: ['js/jquery-ui.js', 
+                'css/jquery-ui.css',
+                'css/jquery-ui.theme.css'],
+            complete: function () {
+                $('input[type=date]').datepicker({
+                    dateFormat: 'yy-mm-dd',
+                    yearRange: '-5:+5',
+                    changeMonth: true,
+                    changeYear: true,
+                    appendText: '(Click to choose a date)'
+                })
+            }
+        });
+    </script>
+</head>
+<body style="background-color:#FFF">
+    <div id="wrapper">
+        <!-- Navigation -->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header" id="navbar-header-mobile">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse" id="toggle-mobile">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a runat="server" id="hrefLogo" class="navbar-brand" href="financial_scorecard.aspx"><img src="Images/mppa.png" id="brand-navbar" class="img-responsive"/></a>
+            </div>
+            <!-- Top Menu Items -->
+            <ul class="nav navbar-right top-nav" id="navbar-header-mobile2">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle top-nav-menu" data-toggle="dropdown"><i class="fa fa-user"></i>&nbsp; <asp:Label ID="LabelUsername" runat="server" Text="Label"></asp:Label> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a runat="server" id="hrefChangePassword" href="change_password.aspx"><i class="fa fa-fw fa-user"></i> Change Password</a>
+                        </li>
+                        <li>
+                            <a id="hrefLogOut" runat="server" href="logout.aspx"><i class="fa fa-fw fa-power-off"></i> Log Out</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <!-- Sidebar Menu Items - These collapse to the responsive navigation menu on small screens -->
+            <div class="collapse navbar-collapse navbar-ex1-collapse">
+                <ul class="nav navbar-nav side-nav" id="sidebar-mobile">
+                    <li>
+                        <a href="dashboard.aspx" id="hrefDashboard" runat="server"><i class="fa fa-fw fa-home"></i> Scorecard Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo5" id="setting" runat="server"><i class="fa fa-fw fa-gear"></i> Setting <i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo5" class="collapse">
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefSetPeriod" href="set_period.aspx" class="menu-collapse"><i class="fa fa fa-calendar"></i>&nbsp;&nbsp;Set BSC Period</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefSetReviewMonth" href="set_review_month.aspx" class="menu-collapse"><i class="fa fa fa-calendar"></i>&nbsp;&nbsp;Set Review Month</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefLinkFinancialGroup" href="link_financial_group.aspx" class="menu-collapse"><i class="fa fa fa-link"></i>&nbsp;&nbsp;Link Scorecard Group</a>
+                            </li>
+                        </ul>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo" id="a-sidebar-mobile"><i class="fa fa-fw fa-table"></i> Scorecard <i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo" class="collapse">
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefFinancialMeasure" href="financial_scorecard.aspx" class="menu-collapse"><i class="fa fa fa-table"></i>&nbsp;&nbsp;Financial Measure</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefIndividualScorecard" href="individual_scorecard.aspx" class="menu-collapse"><i class="fa fa fa-table"></i>&nbsp;&nbsp;Individual Scorecard</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo3" id="a-sidebar-mobile"><i class="fa fa-fw fa-list"></i> My Requests<i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo3" class="collapse">
+                        	<li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefCRKpi" href="request_kpi.aspx" class="menu-collapse"><i class="fa fa fa-circle"></i>&nbsp;&nbsp;KPIs</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefCRSpecificObjective" href="request_so.aspx" class="menu-collapse"><i class="fa fa fa-circle"></i>&nbsp;&nbsp;Specific Objectives</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo4" id="approve_request" runat="server"><i class="fa fa-fw fa-list"></i> Respond Requests<i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo4" class="collapse">
+                        	<li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefApproveKPI" href="approval.aspx" class="menu-collapse"><i class="fa fa fa-circle"></i>&nbsp;&nbsp;KPIs</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefApproveSO" href="approval_specific_objective.aspx" class="menu-collapse"><i class="fa fa fa-circle"></i>&nbsp;&nbsp;Specific Objectives</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo6" id="request_history" runat="server"><i class="fa fa-fw fa-clock-o"></i> Requests History<i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo6" class="collapse">
+                        	<li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefKPIHistory" href="request_change_kpi_history.aspx" class="menu-collapse"><i class="fa fa fa-circle"></i>&nbsp;&nbsp;KPIs</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefSOHistory" href="request_change_specific_objective_history.aspx" class="menu-collapse"><i class="fa fa fa-circle"></i>&nbsp;&nbsp;Specific Objectives</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;" data-toggle="collapse" data-target="#demo2" id="user_management" runat="server"><i class="fa fa-fw fa-user"></i> User Management <i class="fa fa-fw fa-caret-down"></i></a>
+                        <ul id="demo2" class="collapse">
+                        	<li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefScorecardUser" href="scorecard_user.aspx" class="menu-collapse"><i class="fa fa fa-user"></i>&nbsp;&nbsp;Scorecard Users</a>
+                            </li>
+                            <li class="li-sidebar-mobile">
+                                <a runat="server" id="hrefUserAccessRights" href="user_access_rights.aspx" class="menu-collapse"><i class="fa fa fa-user"></i>&nbsp;&nbsp;User Access Rights</a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </nav>
+        <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+        </asp:ContentPlaceHolder>
+
+        </div>
+</body>
+</html>

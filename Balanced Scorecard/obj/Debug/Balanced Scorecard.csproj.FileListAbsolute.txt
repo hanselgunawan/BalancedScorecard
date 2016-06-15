@@ -1,0 +1,119 @@
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Balanced Scorecard.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Balanced Scorecard.pdb
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Antlr3.Runtime.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\AspNet.ScriptManager.jQuery.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\AspNet.ScriptManager.jQuery.UI.Combined.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.AspNet.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.Core.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.Consumer.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.RelyingParty.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\EntityFramework.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.pdfa.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.xmlworker.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.xtra.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.AspNet.Membership.OpenAuth.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.AspNet.Web.Optimization.WebForms.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.ScriptManager.MSAjax.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.ScriptManager.WebForms.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.Web.Infrastructure.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\System.Web.Optimization.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\System.Web.Providers.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\WebGrease.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\EntityFramework.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.Core.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.Consumer.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.RelyingParty.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.AspNet.xml
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\obj\Debug\Balanced Scorecard.dll
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\obj\Debug\Balanced Scorecard.pdb
+D:\MAGANG\testing\Form\Balanced Scorecard\Balanced Scorecard\obj\Debug\Balanced Scorecard.csprojResolveAssemblyReference.cache
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\obj\Debug\Balanced Scorecard.csprojResolveAssemblyReference.cache
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\obj\Debug\Balanced Scorecard.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\obj\Debug\Balanced Scorecard.pdb
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Balanced Scorecard.dll.config
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Balanced Scorecard.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Balanced Scorecard.pdb
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Antlr3.Runtime.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\AspNet.ScriptManager.jQuery.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\AspNet.ScriptManager.jQuery.UI.Combined.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.AspNet.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.Core.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.Consumer.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.RelyingParty.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\EntityFramework.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.pdfa.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.xmlworker.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.xtra.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.AspNet.Membership.OpenAuth.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.AspNet.Web.Optimization.WebForms.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.ScriptManager.MSAjax.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.ScriptManager.WebForms.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\Microsoft.Web.Infrastructure.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\System.Web.Optimization.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\System.Web.Providers.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\WebGrease.dll
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\itextsharp.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\EntityFramework.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.Core.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.Consumer.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.RelyingParty.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\DotNetOpenAuth.AspNet.xml
+D:\MPP\Projects\Balanced Scorecard\Balanced Scorecard\bin\log4net.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\obj\Debug\Balanced Scorecard.csprojResolveAssemblyReference.cache
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\obj\Debug\Balanced Scorecard.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Balanced Scorecard.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Balanced Scorecard.pdb
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Antlr3.Runtime.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\AspNet.ScriptManager.jQuery.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\AspNet.ScriptManager.jQuery.UI.Combined.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.AspNet.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.Core.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.Consumer.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.RelyingParty.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\EntityFramework.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\itextsharp.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\itextsharp.pdfa.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\itextsharp.xmlworker.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\itextsharp.xtra.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Microsoft.AspNet.Membership.OpenAuth.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Microsoft.AspNet.Web.Optimization.WebForms.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Microsoft.ScriptManager.MSAjax.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Microsoft.ScriptManager.WebForms.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\Microsoft.Web.Infrastructure.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\System.Web.Optimization.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\System.Web.Providers.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\WebGrease.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\itextsharp.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\EntityFramework.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.Core.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OAuth.Consumer.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.OpenId.RelyingParty.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\bin\DotNetOpenAuth.AspNet.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU\Balanced Scorecard\obj\Debug\Balanced Scorecard.pdb
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\Balanced Scorecard.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\Balanced Scorecard.pdb
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\itextsharp.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\itextsharp.pdfa.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\itextsharp.xmlworker.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\itextsharp.xtra.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\Microsoft.Web.Infrastructure.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\itextsharp.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\bin\Microsoft.Web.Infrastructure.xml
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\obj\Debug\Balanced Scorecard.csprojResolveAssemblyReference.cache
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\obj\Debug\Balanced Scorecard.dll
+D:\MAGANG\testing\Form\BALANCED SCORECARD BARU 2\Balanced Scorecard\obj\Debug\Balanced Scorecard.pdb

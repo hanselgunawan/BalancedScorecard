@@ -1,0 +1,54 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+
+namespace Balanced_Scorecard
+{
+    public partial class delete_single_specific_objective : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["user_name"] == null)
+            {
+                Response.Redirect("~/index.aspx");
+            }
+            var period_id = Request.QueryString["period_id"];
+            var page = Request.QueryString["page"];
+            var detail_id = Request.QueryString["detail_id"];
+            var header_id = Request.QueryString["header_id"];
+
+            string user_update, date_update, spec_obj;
+            string string_select_SO = "SELECT IndividualDetail_Title FROM IndividualMeasures_Detail WHERE IndividualDetail_ID=" + detail_id + "";
+            string string_update_SO = "UPDATE IndividualMeasures_Detail SET data_status='deleted', user_update=@user_update, date_update=@date_update WHERE IndividualDetail_ID=" + detail_id + "";
+            string string_update_Header = "exec SP_UpdateIndividualHeader " + header_id + "";
+
+            user_update = Session["user_name"].ToString();
+            date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            spec_obj = "";
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                SqlCommand sql_select_SO = new SqlCommand(string_select_SO, conn);
+                SqlCommand sql_update_SO = new SqlCommand(string_update_SO, conn);
+                SqlCommand sql_update_header = new SqlCommand(string_update_Header, conn);
+                sql_update_SO.Parameters.AddWithValue("@user_update", user_update);
+                sql_update_SO.Parameters.AddWithValue("@date_update", date_update);
+                conn.Open();
+                spec_obj = sql_select_SO.ExecuteScalar().ToString();
+                sql_update_SO.ExecuteNonQuery();
+                sql_update_header.ExecuteNonQuery();
+                conn.Close();
+            }
+
+            ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Delete " + spec_obj + " Success!'); window.location='" + Request.ApplicationPath + "/individual_scorecard.aspx?page=" + page + "&id=" + period_id + "';", true);
+        }
+    }
+}

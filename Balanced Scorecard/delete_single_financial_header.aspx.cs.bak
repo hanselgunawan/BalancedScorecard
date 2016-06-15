@@ -1,0 +1,50 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+
+namespace Balanced_Scorecard
+{
+    public partial class delete_single_financial_header : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["user_name"] == null)
+            {
+                Response.Redirect("~/index.aspx");
+            }
+            var page = Request.QueryString["page"];
+            var period_id = Request.QueryString["period_id"];
+            var header_id = Request.QueryString["header_id"];
+
+            string user_update, date_update, financial_group;
+            string string_select_group_name = "SELECT FinancialHeader_Group FROM FinancialMeasures_Header WHERE FinancialHeader_ID=" + header_id + "";
+            string string_delete_group = "UPDATE FinancialMeasures_Header SET user_update=@user_update, date_update=@date_update, data_status='deleted' WHERE FinancialHeader_ID=" + header_id + "";
+
+            financial_group = "";
+            user_update = Session["user_name"].ToString();
+            date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                SqlCommand sql_delete_group = new SqlCommand(string_delete_group, conn);
+                SqlCommand sql_select_group_name = new SqlCommand(string_select_group_name, conn);
+                sql_delete_group.Parameters.AddWithValue("@user_update", user_update);
+                sql_delete_group.Parameters.AddWithValue("@date_update", date_update);
+                conn.Open();
+                financial_group = sql_select_group_name.ExecuteScalar().ToString();
+                sql_delete_group.ExecuteNonQuery();
+                conn.Close();
+            }
+
+            ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Delete " + financial_group + " Success!'); window.location='" + Request.ApplicationPath + "/financial_scorecard.aspx?page=" + page + "&id=" + period_id + "';", true);
+        }
+    }
+}

@@ -1,0 +1,577 @@
+/* CSS for LOGIN*/
+
+#a-login-page{
+	text-decoration:none;
+	color:white;
+}
+
+#body-bg-login{
+	background-image:url(../images/login-bg.jpg);
+}
+
+#img-logo-login{
+	margin-bottom:30px;
+	padding-bottom:10px;
+	padding-top:10px;
+	border-bottom:1px solid #999;
+}
+
+#login-box{
+	max-width:480px;
+	box-shadow: 2px 2px 5px #333;
+	background-color:#29166f;
+	position:relative;
+	border-radius:8px;
+	text-align:center;
+	margin-top:80px;
+}
+
+.btn-logo{
+	width: 120px;
+	display:block;
+	margin: 20px auto 20px;
+	color: white;
+	text-transform:uppercase ;	
+	text-shadow: 1px 2px 2px #c44c4c;
+	background: #48c7d5; 
+	border: 1px solid #42a3ae;
+	transition:ease all 0.3s;
+}
+
+.btn-logo:hover{
+	background:#fff402;
+}
+
+.btn-logo:hover #a-login-page{
+	color:black;
+}
+
+.btn-logo:focus{
+	color:white;
+}
+
+/*CSS for Search Button*/
+.btn-search {
+    color:white;
+    background-color:#29166f;
+}
+
+.btn-search:hover, .btn-search:focus, .btn-search:active{
+    color:white;
+    background-color:#1d0e45;
+}
+
+/*CSS for Corporate Scorecard (CSC) */
+
+.csc_p{
+	margin-bottom:0px;
+	font-weight:bold;
+}
+
+.csc_period{
+	color:black;
+	margin-left:5px;
+	font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-weight:500;
+}
+
+#panel_csc{
+	margin-top:20px;
+}
+
+#btnAddMeasure{
+	box-shadow:1px 1px 1px #29166f;
+}
+
+#breadcrumb-csc{
+	background-color:transparent;
+}
+
+.centering-th{
+	text-align:center;
+    background-color:#29166f; 
+    color:white;
+}
+
+.centering-th-period{
+	text-align:center;
+}
+
+.centering-th2{
+	text-align:center;
+}
+
+
+/*CSS for Set Period*/
+.btn-activate-period{
+	margin-top:20px;
+	margin-right:10%;
+	font-weight:bold;
+	transition:all ease 0.2s;
+}
+
+.btn-save-period{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#29166f;
+}
+
+.btn-save-period:hover{
+	background-color:#1d0e45;
+}
+
+/*CSS for Add Group*/
+.custom-static {
+    margin-top:100px;
+}
+
+/*CSS for Add Measure Page */
+.customize-label{
+	margin-top:-5px;
+}
+
+.btn-reset-csc{
+	margin-top:40px;
+	margin-right:10%;
+	font-weight:bold;
+	transition:all ease 0.2s;
+}
+
+.btn-add-csc{
+	margin-top:40px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#29166f;
+}
+.btn-add-csc:hover{
+	background-color:#1d0e45;
+}
+
+/* CSS for Individual Scorecard */
+.td-align{
+	vertical-align:middle !important;
+}
+
+.custom-detail-header {
+    background-color:#29166f; 
+    color:white;
+}
+
+/* CSS for Add New KPI */
+.custom-radio-button {
+    margin-top:20px;
+}
+
+.customize-btn-add-sub{
+	box-shadow:2px 2px 2px #29166f;
+}
+
+.btn-add-sub-measure{
+	margin-top:10px;
+	margin-right:10%;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	box-shadow:2px 2px 2px #29166f; 
+}
+
+.relative-to-btn-new-KPI {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 15.2em;
+    padding-left: 25px;
+}
+
+/* CSS for Individual Detail */
+.btn-new-sub-measure{
+	margin-top:10px;
+	margin-right:10%;
+	font-weight:100;
+	transition:all ease 0.2s;
+	box-shadow:2px 2px 2px #29166f;
+}
+
+/* CSS for SET PERIOD */
+.active-period{
+	background-color:#0F6;
+}
+
+.inactive-period{
+	background-color:#F9C;
+}
+
+#btnAddPeriod{
+	box-shadow:1px 1px 1px #29166f;
+}
+
+/*CSS for Add Period*/
+.period-error-message {
+    font-weight: bold;
+    color: red;
+    margin-top: 5px;
+}
+
+/*CSS for User */
+.btn-reset-user{
+	margin-top:20px;
+	margin-right:10%;
+	font-weight:bold;
+	transition:all ease 0.2s;
+}
+
+.btn-add-user{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#29166f;
+}
+.btn-add-user:hover{
+	background-color:#1d0e45;
+}
+
+/*CSS for Group*/
+.btn-cancel-group{
+	margin-top:20px;
+	margin-right:10%;
+	font-weight:bold;
+	transition:all ease 0.2s;
+}
+
+.btn-add-group-container {
+    position:relative;
+    text-align: left;
+}
+
+.btn-add-group-container.add-button {
+    width:6em;
+}
+
+.btn-add-group-container.add-button-new-KPI {
+    width:15em;
+}
+
+.relative-to-btn {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 6em;
+    padding-left: 25px;
+}
+
+.btn-add-group-container.edit-button {
+    width:6em;
+}
+
+.relative-to-edit-btn {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 6em;
+    padding-left: 25px;
+}
+
+.btn-add-group{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#29166f;
+}
+
+.btn-delete-group{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#e20055;
+}
+
+.btn-delete-group:hover, .btn-delete-group:active, .btn-delete-group:focus {
+    background-color:#98013a;
+}
+
+.btn-add-group:hover, .btn-add-group:active, .btn-add-group:focus{
+	background-color:#1d0e45;
+}
+
+/*CSS for Link Page*/
+.error-message-link {
+    margin-top:-32px;
+    font-family:Arial; 
+    font-weight:bold; 
+    color:red;
+    width:18em;
+    visibility:hidden;
+}
+
+.link-row{
+	margin-top:20px;
+}
+
+.bold-heading{
+	font-weight:bold;
+}
+
+.listbox-custom{
+	width:100%;
+    border-style:none;
+    font-weight:bold;
+    font-size:14px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    text-align:left;
+}
+
+.listbox-custom:focus, .listbox-custom:active{
+    border-color:white;
+}
+
+.listbox-custom option{
+    padding:8px;
+    padding-left:20px;
+    color:#29166f;
+    font-weight:bold;
+    border-bottom:1px solid #29166f;
+}
+
+.custom-arrow{
+	background-color:#29166f;
+	margin-bottom:40px;
+	transition:all ease 0.2s;
+}
+
+.custom-arrow:active,.custom-arrow:focus{
+	background-color:#29166f;
+}
+
+.custom-arrow:hover{
+	background-color:#1d0e45;
+	border:3px solid black;
+}
+
+.btn-cancel-link{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+}
+
+.btn-cancel-link:active,.btn-cancel-link:focus{
+	background-color:#286090;
+}
+
+.btn-done-linking-container {
+    position:relative;
+    text-align: left;
+}
+
+.btn-done-linking-container.done-button {
+    width:11em;
+}
+
+.relative-to-btn-done {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width:11em;
+    padding-left: 25px;
+}
+
+.btn-done-linking{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#29166f;
+}
+.btn-done-linking:hover, .btn-done-linking:active, .btn-done-linking:focus{
+	background-color:#1d0e45;
+}
+
+/*CSS for Add New Detail*/
+.error-message {
+    margin-bottom: -20px !important;
+    visibility:hidden;
+}
+
+.btn-cancel-add-detail{
+	margin-top:20px;
+	margin-right:10%;
+	font-weight:bold;
+	transition:all ease 0.2s;
+}
+
+/*CSS for Add Specific Objective*/
+
+.btn-add-more-container {
+    position:relative;
+    text-align: left;
+    width:9em;
+}
+
+.btn-add-more{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#337ab7;
+    margin-right:7em;
+}
+
+.btn-add-more:hover, .btn-add-more:active, .btn-add-more:focus{
+	background-color: #286090;
+}
+
+.relative-to-btn-more {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 8.8em;
+    padding-left: 25px;
+}
+
+/*CSS for Pagination*/
+.my-paging {
+    text-align:right !important;
+    margin-top:-20px !important;
+}
+
+/*CSS for Link Financial Group*/
+.custom-group-name {
+    margin-top:8px;
+    width:120px;
+    text-align:right;
+}
+
+/*CSS for Add Item Financial Measure*/
+.btn-add-more-finance{
+	margin-top:20px;
+	font-weight:bold;
+	transition:all ease 0.2s;
+	background-color:#29166f;
+    margin-right:7em;
+}
+
+.btn-add-more-finance:hover, .btn-add-more-finance:active, .btn-add-more-finance:focus{
+	background-color: #1d0e45;
+}
+
+/*CSS for IMPORT USER EXCEL*/
+.relative-to-btn-import {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 7em;
+    padding-left: 25px;
+}
+
+/*CSS for Gridview*/
+.table-gridview {
+    margin-bottom:0px;
+}
+
+.btn-delete-financial-header-container {
+    position:relative;
+    text-align: left;
+    width:7em;
+}
+
+.relative-to-btn-delete {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 7em;
+    padding-left: 25px;
+}
+
+/*CSS for Change Password*/
+
+.relative-to-btn-change {
+    position:absolute;
+    top:0;
+    right:0;
+    left:0;
+    bottom:0;
+    width: 12.5em;
+    padding-left: 25px;
+}
+
+.btn-change-pass-container {
+    position:relative;
+    text-align: left;
+    width:12.5em;
+}
+
+/*CSS for Pagination Gridview*/
+.pagination-gridview {
+    padding-left: 0;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+ 
+.pagination-gridview table > tbody > tr > td {
+    display: inline;
+}
+ 
+.pagination-gridview table > tbody > tr > td > a,
+.pagination-gridview table > tbody > tr > td > span {
+    position: relative;
+    float: left;
+    padding: 8px 12px;
+    line-height: 1.42857143;
+    text-decoration: none;
+    color: #337ab7;
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    margin-left: -1px;
+}
+ 
+.pagination-gridview table > tbody > tr > td > span {
+    position: relative;
+    float: left;
+    padding: 8px 12px;
+    line-height: 1.42857143;
+    text-decoration: none;    
+    margin-left: -1px;
+    z-index: 2;
+    color: #ffffff;
+    font-weight:bold;
+    background-color: #29166f;
+    border-color: #dddddd;
+    cursor: default;
+}
+
+ 
+.pagination-gridview table > tbody > tr > td:first-child > a,
+.pagination-gridview table > tbody > tr > td:first-child > span {
+    margin-left: 0;
+    border-bottom-left-radius: 4px;
+    border-top-left-radius: 4px;
+}
+ 
+.pagination-gridview table > tbody > tr > td:last-child > a,
+.pagination-gridview table > tbody > tr > td:last-child > span {
+    border-bottom-right-radius: 4px;
+    border-top-right-radius: 4px;
+}
+ 
+.pagination-gridview table > tbody > tr > td > a:hover,
+.pagination-gridview table > tbody > tr > td > a:focus {
+    color: #337ab7;
+    background-color: #eeeeee;
+    border-color: #dddddd;
+}
+
+/*CSS for Gridview Access Rights*/
+.header-white {
+    color:white;
+}

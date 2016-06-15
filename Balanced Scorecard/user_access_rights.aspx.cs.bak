@@ -1,0 +1,232 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Globalization;
+using System.Data.Sql;
+using System.Data.SqlClient;
+using System.Data;
+using System.Collections;
+
+namespace Balanced_Scorecard
+{
+    public partial class user_access_rights : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+
+        private DataTable CreateDataTable()
+        {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Access_Rights_Code");
+            dt.Columns.Add("Description");
+            dt.AcceptChanges();
+            return dt;
+        }
+
+        private DataTable AddRow(GridViewRow gvRow, DataTable dt)
+        {
+            DataRow[] dr = dt.Select("Access_Rights_Code = '" + gvRow.Cells[1].Text + "'");
+            if (dr.Length <= 0)
+            {
+                dt.Rows.Add();
+                dt.Rows[dt.Rows.Count - 1]["Access_Rights_Code"] = gvRow.Cells[1].Text;
+                dt.AcceptChanges();
+            }
+            return dt;
+        }
+
+        private DataTable RemoveRow(GridViewRow gvRow, DataTable dt)
+        {
+            DataRow[] dr = dt.Select("Access_Rights_Code = '" + gvRow.Cells[1].Text + "'");
+            if (dr.Length > 0)
+            {
+                dt.Rows.Remove(dr[0]);
+                dt.AcceptChanges();
+            }
+            return dt;
+        }
+
+        private void BindPrimaryGrid()
+        {
+            string query = "SELECT * FROM AccessRightsCode";
+            SqlConnection con = new SqlConnection(str_connect);
+            SqlDataAdapter sda = new SqlDataAdapter(query, con);
+            DataTable dt = new DataTable();
+            sda.Fill(dt);
+            GridView1.DataSource = dt;
+            GridView1.DataBind();
+
+        }
+
+        private void GetData()
+        {
+            DataTable dt;
+            if (ViewState["SelectedRecords"] != null)
+                dt = (DataTable)ViewState["SelectedRecords"];
+            else
+                dt = CreateDataTable();
+            CheckBox chkAll = (CheckBox)GridView1.HeaderRow
+                                .Cells[0].FindControl("chkAll");
+            for (int i = 0; i < GridView1.Rows.Count; i++)
+            {
+                if (chkAll.Checked)
+                {
+                    dt = AddRow(GridView1.Rows[i], dt);
+                }
+                else
+                {
+                    CheckBox chk = (CheckBox)GridView1.Rows[i]
+                                    .Cells[0].FindControl("chk");
+                    if (chk.Checked)
+                    {
+                        dt = AddRow(GridView1.Rows[i], dt);
+                    }
+                    else
+                    {
+                        dt = RemoveRow(GridView1.Rows[i], dt);
+                    }
+                }
+            }
+            ViewState["SelectedRecords"] = dt;
+        }
+
+        private void SetData()
+        {
+            CheckBox chkAll = (CheckBox)GridView1.HeaderRow.Cells[0].FindControl("chkAll");
+            chkAll.Checked = true;
+            if (ViewState["SelectedRecords"] != null)
+            {
+                DataTable dt = (DataTable)ViewState["SelectedRecords"];
+                for (int i = 0; i < GridView1.Rows.Count; i++)
+                {
+                    CheckBox chk = (CheckBox)GridView1.Rows[i].Cells[0].FindControl("chk");
+                    if (chk != null)
+                    {
+                        DataRow[] dr = dt.Select("Access_Rights_Code = '" + GridView1.Rows[i].Cells[1].Text + "'");
+                        chk.Checked = dr.Length > 0;
+                        if (!chk.Checked)
+                        {
+                            chkAll.Checked = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        protected void CheckBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            GetData();
+            SetData();
+        }
+
+        protected void OnPaging(object sender, GridViewPageEventArgs e)
+        {
+            GetData();
+            GridView1.PageIndex = e.NewPageIndex;
+            BindPrimaryGrid();
+            SetData();
+
+        }
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                if (Session["user_name"] == null)
+                {
+                    Response.Redirect("index.aspx");
+                }
+                ((Label)Master.FindControl("LabelUsername")).Text = Session["user_name"].ToString();//untuk akses Master Page
+                BindPrimaryGrid();
+            }
+
+            if (!IsPostBack)
+            {
+                string query = "SELECT Access_Rights_Code FROM [GroupAccessRights] WHERE UserGroup_ID='1' ORDER BY Access_Rights_Code ASC";
+                SqlConnection con2 = new SqlConnection(str_connect);
+                SqlDataAdapter sda2 = new SqlDataAdapter(query, con2);
+                DataTable dt = new DataTable();
+                sda2.Fill(dt);
+                ViewState["SelectedRecords"] = dt;
+                SetData();
+            }
+        }
+
+        protected void DropDownListUserGroup_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string query = "SELECT Access_Rights_Code FROM [GroupAccessRights] WHERE UserGroup_ID='"+DropDownListUserGroup.SelectedValue+"' ORDER BY Access_Rights_Code ASC";
+            SqlConnection con2 = new SqlConnection(str_connect);
+            SqlDataAdapter sda2 = new SqlDataAdapter(query, con2);
+            DataTable dt = new DataTable();
+            sda2.Fill(dt);
+            ViewState["SelectedRecords"] = dt;
+            SetData();
+        }
+
+        protected void btnsaveaccess_Click(object sender, EventArgs e)
+        {
+            string user_create, user_update, date_create, date_update;
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                conn.Open();
+                user_create = Session["user_name"].ToString();
+                user_update = Session["user_name"].ToString();
+                date_create = DateTime.Today.ToString("yyyy-MM-dd");//harus M GEDE!
+                date_update = DateTime.Today.ToString("yyyy-MM-dd");
+
+                DataTable dt = (DataTable)ViewState["SelectedRecords"];
+
+                if (dt.Rows.Count > 0)
+                {
+
+
+                    SqlCommand cmd = null;
+                    string query;
+                    query = "Select Access_Rights_Code FROM [GroupAccessRights] where UserGroup_ID='" + DropDownListUserGroup.SelectedValue + "'";
+                    SqlDataAdapter da = new SqlDataAdapter(query, conn);
+                    DataTable dt_input = new DataTable();
+                    da.Fill(dt_input);
+
+                    foreach (DataRow dr_input in dt_input.Rows)
+                    {
+                        int flag = 0;
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            if (dr_input[0].ToString() != dr[0].ToString())
+                            {
+                                flag++;
+                            }
+                            if (flag == dt.Rows.Count)
+                            {
+                                query = "DELETE FROM [GroupAccessRights] WHERE UserGroup_ID='" + DropDownListUserGroup.SelectedValue + "' AND  Access_Rights_Code='" + dr_input[0] + "'";
+                                cmd = new SqlCommand(query, conn);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        query = "Select Access_Rights_Code from [GroupAccessRights] WHERE UserGroup_ID='" + DropDownListUserGroup.SelectedValue + "' AND  Access_Rights_Code='" + dr[0] + "'";
+                        SqlCommand checkid = new SqlCommand(query, conn);
+                        SqlDataReader reader = checkid.ExecuteReader();
+                        if (!reader.HasRows)
+                        {
+                            string string_insert_user = "INSERT INTO GroupAccessRights(UserGroup_ID,Access_Rights_Code)VALUES(@GroupId, @GroupAccessCode)";
+                            SqlCommand sql_insert_user = new SqlCommand(string_insert_user, conn);
+                            sql_insert_user.Parameters.AddWithValue("@GroupId", Convert.ToInt16(DropDownListUserGroup.SelectedValue));
+                            sql_insert_user.Parameters.AddWithValue("@GroupAccessCode", dr[0]);
+                            sql_insert_user.ExecuteNonQuery();
+                        }
+                    }
+                    ScriptManager.RegisterStartupScript(this, this.GetType(), "alertMessage", "alert('Hak Akses Sudah Tersimpan!'); window.location='" + Request.ApplicationPath + "user_access_rights.aspx';", true);
+                }
+
+
+
+                conn.Close();
+            }
+        }
+    }
+}

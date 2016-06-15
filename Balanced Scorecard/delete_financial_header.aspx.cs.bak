@@ -1,0 +1,128 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+
+namespace Balanced_Scorecard
+{
+    public partial class delete_financial_header : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                if (Session["user_name"] == null)
+                {
+                    Response.Redirect("~/index.aspx");
+                }
+                ((Label)Master.FindControl("LabelUsername")).Text = Session["user_name"].ToString();
+                var period_id = Request.QueryString["period_id"];
+                var page = Request.QueryString["page"];
+                string startdate_to_date, enddate_to_date;
+
+                financial_measure_link.Attributes.Add("href","financial_scorecard.aspx?page=" + page + "&id=" + period_id + "");
+                back_link.Attributes.Add("href", "financial_scorecard.aspx?page=" + page + "&id=" + period_id + "");
+
+                SqlDataAdapter adapter = new SqlDataAdapter();
+                DataSet ds = new DataSet();
+                string select_period = "SELECT Start_Period, End_Period FROM BSC_Period WHERE Period_ID=" + period_id + "";
+                string string_select_header = "SELECT FinancialHeader_Group, FinancialHeader_StretchRating, FinancialHeader_Review FROM FinancialMeasures_Header WHERE Period_ID=" + period_id + " AND data_status='exist'";
+                SqlConnection conn = new SqlConnection(str_connect);
+                conn.Open();
+                SqlCommand sql_select_header = new SqlCommand(string_select_header, conn);
+                SqlCommand sql_select_period = new SqlCommand(select_period, conn);
+
+                using (SqlDataReader PeriodReader = sql_select_period.ExecuteReader())
+                {
+                    while (PeriodReader.Read())
+                    {
+                        DateTime start_date = Convert.ToDateTime(PeriodReader["Start_Period"]);
+                        DateTime end_date = Convert.ToDateTime(PeriodReader["End_Period"]);
+                        startdate_to_date = start_date.ToString("MMM yyyy");//aslinya MM-dd-yyyy
+                        enddate_to_date = end_date.ToString("MMM yyyy");//ubah format tanggal!
+                        LabelPeriod.Text = startdate_to_date + " - " + enddate_to_date;
+                    }
+                    PeriodReader.Dispose();
+                    PeriodReader.Close();
+                }
+
+                adapter.SelectCommand = sql_select_header;
+                adapter.Fill(ds);
+                adapter.Dispose();
+                sql_select_header.Dispose();
+                conn.Close();
+
+                if (ds.Tables[0].Rows.Count == 0)//jika tidak ada Specific Objectives
+                {
+                    ds.Tables[0].Rows.Add(ds.Tables[0].NewRow());
+                    GridView1.DataSource = ds;
+                    GridView1.DataBind();
+                    int columncount = GridView1.Rows[0].Cells.Count;
+                    GridView1.Rows[0].Cells.Clear();
+                    GridView1.Rows[0].Cells.Add(new TableCell());
+                    GridView1.Rows[0].Cells[0].ColumnSpan = columncount;
+                    GridView1.Rows[0].Cells[0].Text = "No Group To Display";
+                    GridView1.Rows[0].Cells[0].HorizontalAlign = HorizontalAlign.Center;
+                }
+                else//jika ada Specific Objectives
+                {
+                    GridView1.DataSource = ds.Tables[0];
+                    GridView1.DataBind();
+                }
+
+            }
+        }
+
+        protected void OnClickDelete(object sender, EventArgs e)
+        {
+            StringBuilder sb_deleted_financial_measure = new StringBuilder();
+            var period_id = Request.QueryString["period_id"];
+            var page = Request.QueryString["page"];
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+               string user_update, date_update;
+               int counter = 1;
+               user_update = Session["user_name"].ToString();
+               date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+               foreach (GridViewRow row in GridView1.Rows)
+               {
+                   if (row.RowType == DataControlRowType.DataRow)
+                   {
+                       CheckBox chkRow = (row.Cells[0].FindControl("chkCtrl") as CheckBox);
+                       if (chkRow.Checked)
+                       {
+                          string group_name = row.Cells[1].Text;
+                          string string_update_header = "UPDATE FinancialMeasures_Header SET data_status='deleted', user_update=@user_update, date_update=@date_update WHERE Period_ID=" + period_id + " AND FinancialHeader_Group='" + group_name + "'";
+                          SqlCommand sql_update_header = new SqlCommand(string_update_header, conn);
+                          sql_update_header.Parameters.AddWithValue("@user_update", user_update);
+                          sql_update_header.Parameters.AddWithValue("@date_update", date_update);
+                          conn.Open();
+                          sql_update_header.ExecuteNonQuery();
+                          conn.Close();
+                          sb_deleted_financial_measure.Append("  " + counter + ". " + group_name + "\\n");
+                          counter++;
+                        }
+                   }
+                }//end of ForEach(GridViewRow)
+
+                if (counter > 1)
+                {
+                   ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Delete Financial Group:\\n" + sb_deleted_financial_measure + "  \\nSUCCESS!'); window.location='" + "delete_financial_header.aspx?page="+page+"&period_id="+period_id+"';", true);
+                }
+                else
+                {
+                    ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('There is no selected group to be deleted!'); window.location='" + "delete_financial_header.aspx?page=" + page + "&period_id=" + period_id + "';", true);
+                }
+            }
+        }
+    }
+}

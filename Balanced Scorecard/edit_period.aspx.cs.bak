@@ -1,0 +1,415 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+using System.Net.Mail;
+
+namespace Balanced_Scorecard
+{
+    public partial class edit_period : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)//untuk mengambil value pada pertama kali page load saja. Jika page di reload, value-nya tetap sama
+            {
+                if (Session["user_name"] == null)
+                {
+                    Response.Redirect("~/index.aspx");
+                }
+                ((Label)Master.FindControl("LabelUsername")).Text = Session["user_name"].ToString();
+                var page = Request.QueryString["page"];
+                var period_id = Request.QueryString["period_id"];
+
+                //insert data ke Drop Down List Status
+                DropDownListStatus.Items.Add("Active");
+                DropDownListStatus.Items.Add("Inactive");
+
+                //Link untuk kembali ke Set BSC Period (breadcrumb)
+                SetBSCPeriod.Attributes.Add("href","set_period.aspx?page="+page+"");
+
+                //Link untuk Cancel Set BSC Period
+                CancelEditPeriod.Attributes.Add("href", "set_period.aspx?page=" + page + "");
+
+                //error message jika sudah ada yang Active
+                FailActive.Attributes.Add("style", "margin-bottom:-20px; color:red; font-weight:bold; visibility:hidden");
+
+                //error message jika Tahun sudah ada
+                start_year_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px");
+                end_year_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px");
+                less_than_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px");
+
+                //error message jika field Tahun tidak diisi
+                required_start_date.Attributes.Add("style", "visibility:hidden");
+                required_end_date.Attributes.Add("style", "visibility:hidden");
+
+                //error message jika Format Date yang dimasukkan Invalid
+                invalid_start_date.Attributes.Add("style", "visibility:hidden; margin-top:-25px");
+                invalid_end_date.Attributes.Add("style", "visibility:hidden; margin-top:-25px");
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    string select_period_by_ID = "SELECT * FROM BSC_Period WHERE Period_ID=" + period_id + "";
+                    SqlCommand sql_select_period_by_ID = new SqlCommand(select_period_by_ID, conn);
+                    conn.Open();
+                    using (SqlDataReader PeriodReader = sql_select_period_by_ID.ExecuteReader())
+                    {
+                        if (PeriodReader.HasRows)
+                        {
+                            while (PeriodReader.Read())
+                            {
+                                string start_date_formatted, end_date_formatted;//untuk format date agar bisa ditampilkan di value input type DATE
+                                DateTime start_date = Convert.ToDateTime(PeriodReader["Start_Period"]);
+                                DateTime end_date = Convert.ToDateTime(PeriodReader["End_Period"]);
+                                start_date_formatted = start_date.ToString("yyyy-MM-dd");//agar bisa dijadikan value
+                                end_date_formatted = end_date.ToString("yyyy-MM-dd");//harus pakai M besar!
+
+                                input_start_date.Text = start_date_formatted;
+                                input_end_date.Text = end_date_formatted;
+                                description.InnerText = PeriodReader["Description"].ToString();
+                                DropDownListStatus.SelectedValue = PeriodReader["Period_Status"].ToString();
+
+                                if (PeriodReader["Period_Status"].ToString() == "Active")
+                                {
+                                    input_start_date.Enabled = false;
+                                    input_end_date.Enabled = false;
+                                }
+
+                            }
+                            SpanEditPeriod.Attributes.Add("class", "btn btn-success btn-add-group btn-add-group-container edit-button");
+                        }//end of if(HasRows)
+                        else
+                        {
+                            SpanEditPeriod.Attributes.Add("class", "btn btn-add-group btn-add-group-container edit-button disabled");
+                        }
+                    }
+                    conn.Close();
+                }//end of SqlConnection
+            }//end of IfPostBack
+
+        }
+
+        protected void OnClickEditPeriod(object sender, EventArgs e)
+        {
+            var page = Request.QueryString["page"];
+            var period_id = Request.QueryString["period_id"];
+            int periode = int.Parse(period_id);//agar bisa di Passing By Value
+            string desc = description.InnerText;
+            string status = DropDownListStatus.SelectedValue;
+            string user_update, date_update;
+            bool start_year_exist, end_year_exist, active_status_exist, end_lessthan_start;
+
+            //untuk melihat apakah Tahun yang dimasukkan sudah ada atau belum
+            string start_date_formatted, end_date_formatted, user_email;
+            string get_user_email = "SELECT empEmail FROM ScorecardUser WHERE EmpId=" + Session["user_nik"] + "";
+            int start_year, end_year, date_diff;
+            DateTime start_date = Convert.ToDateTime(input_start_date.Text);
+            DateTime end_date = Convert.ToDateTime(input_end_date.Text);
+
+            start_date_formatted = start_date.ToString("yyyy");//mengambil Tahun saja dari apa yang diinput user
+            end_date_formatted = end_date.ToString("yyyy");//mengambil Tahun saja dari apa yang diinput user
+
+            date_diff = DateTime.Compare(start_date, end_date);
+            start_year = int.Parse(start_date_formatted);//value TAHUN yang diinput user
+            end_year = int.Parse(end_date_formatted);//value TAHUN yang diinput user
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                conn.Open();
+                active_status_exist = CheckActive(conn, periode);//check status yang Active
+                start_year_exist = CheckStartYear(start_year, conn, periode);//check Start Year
+                end_year_exist = CheckEndYear(end_year, conn, periode);//check End Year
+                end_lessthan_start = CheckIfEndGreaterThanStart(date_diff);//check apakah End Period lebih besar dari Start Period
+                SqlCommand sql_get_email = new SqlCommand(get_user_email, conn);
+                user_email = (string)sql_get_email.ExecuteScalar();
+                user_update = Session["user_name"].ToString();
+                date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+                if (active_status_exist == false && start_year_exist==false && end_year_exist==false && end_lessthan_start==false)
+                {
+                    string update_period = "UPDATE BSC_Period SET Start_Period='" + input_start_date.Text + "', End_Period='" + input_end_date.Text + "', Description=@period_description, Period_Status=@period_status, user_update=@user_update, date_update=@date_update WHERE Period_ID=" + period_id + "";
+                    SqlCommand sql_update_period = new SqlCommand(update_period, conn);
+                    sql_update_period.Parameters.AddWithValue("@period_description", desc);
+                    sql_update_period.Parameters.AddWithValue("@period_status", status);
+                    sql_update_period.Parameters.AddWithValue("@user_update", user_update);
+                    sql_update_period.Parameters.AddWithValue("@date_update", date_update);
+                    sql_update_period.ExecuteNonQuery();
+
+                    if (status == "Active")
+                    {
+                        sendMailActivated(user_email);
+                    }
+                    else
+                    {
+                        sendMailDeactivated(user_email);
+                    }
+
+                    ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Period Has Been Updated!'); window.location='" + Request.ApplicationPath + "/set_period.aspx?page="+page+"';", true);
+                }
+                conn.Close();
+            }
+        }
+
+        public void sendMailActivated(string sender_email)
+        {
+            string get_all_email_bsc_user = "SELECT DISTINCT empEmail FROM ScorecardUser WHERE empStatus='Yes' AND EmpId<>'" + Session["emp_nik"] + "'";
+            string start_date_formatted, end_date_formatted;
+            DateTime start_date = Convert.ToDateTime(input_start_date.Text);
+            DateTime end_date = Convert.ToDateTime(input_end_date.Text);
+            start_date_formatted = start_date.ToString("MMM");//mengambil Tahun saja dari apa yang diinput user
+            end_date_formatted = end_date.ToString("MMM yyyy");//mengambil Tahun saja dari apa yang diinput user
+
+            SmtpClient mailclient = new SmtpClient();  //Karena FILE_LOCATION terjadi perubahan setiap di-klik, maka
+            using (MailMessage msg = new MailMessage())//harus pake USING untuk CLEAR semua Resource yang pernah dipake
+            {
+                /******************** SEND Email TO Users **************************************/
+                msg.Subject = "BSC Period has been activated";
+                msg.Body = "Hello,<br/>"
+                         + "Balanced Scorecard for period:<b> " + start_date_formatted + " - " + end_date_formatted + "</b> has been <b>ACTIVATED</b><br/><br/>"
+                         + "Thank you for your cooperation.<br/><br/>"
+                         + "Best Regards,<br/>"
+                         + "<b>" + Session["user_name"] + "</b>";
+                msg.From = new MailAddress(sender_email);
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_get_all_email_bsc_user = new SqlCommand(get_all_email_bsc_user, conn);
+                    using (SqlDataReader EmailReader = sql_get_all_email_bsc_user.ExecuteReader())
+                    {
+                        while (EmailReader.Read())
+                        {
+                            string recipient_email;
+                            if (DBNull.Value.Equals(EmailReader["empEmail"]))
+                            {
+                                recipient_email = "unknown@email.com";
+                            }
+                            else
+                            {
+                                recipient_email = EmailReader["empEmail"].ToString();
+                            }
+                            msg.To.Add(new MailAddress(recipient_email));
+                        }
+                        EmailReader.Dispose();
+                        EmailReader.Close();
+                    }
+                    conn.Close();
+                }
+                msg.IsBodyHtml = true;
+                mailclient.Host = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
+                mailclient.Port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SMTPPort"]);
+                mailclient.Send(msg);
+            }
+        }
+
+        public void sendMailDeactivated(string sender_email)
+        {
+            string get_all_email_bsc_user = "SELECT DISTINCT empEmail FROM ScorecardUser WHERE empStatus='Yes' AND EmpId<>'" + Session["emp_nik"] + "'";
+            string start_date_formatted, end_date_formatted;
+            DateTime start_date = Convert.ToDateTime(input_start_date.Text);
+            DateTime end_date = Convert.ToDateTime(input_end_date.Text);
+            start_date_formatted = start_date.ToString("MMM");//mengambil Tahun saja dari apa yang diinput user
+            end_date_formatted = end_date.ToString("MMM yyyy");//mengambil Tahun saja dari apa yang diinput user
+
+            SmtpClient mailclient = new SmtpClient();  //Karena FILE_LOCATION terjadi perubahan setiap di-klik, maka
+            using (MailMessage msg = new MailMessage())//harus pake USING untuk CLEAR semua Resource yang pernah dipake
+            {
+                /******************** SEND Email TO Users **************************************/
+                msg.Subject = "BSC Period has been deactivated";
+                msg.Body = "Hello,<br/>"
+                         + "Balanced Scorecard for period:<b> " + start_date_formatted + " - " + end_date_formatted + "</b> has been <b>DEACTIVATED</b><br/><br/>"
+                         + "Thank you for your cooperation.<br/><br/>"
+                         + "Best Regards,<br/>"
+                         + "<b>" + Session["user_name"] + "</b>";
+                msg.From = new MailAddress(sender_email);
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    conn.Open();
+                    SqlCommand sql_get_all_email_bsc_user = new SqlCommand(get_all_email_bsc_user, conn);
+                    using (SqlDataReader EmailReader = sql_get_all_email_bsc_user.ExecuteReader())
+                    {
+                        while (EmailReader.Read())
+                        {
+                            string recipient_email;
+                            if (DBNull.Value.Equals(EmailReader["empEmail"]))
+                            {
+                                recipient_email = "unknown@email.com";
+                            }
+                            else
+                            {
+                                recipient_email = EmailReader["empEmail"].ToString();
+                            }
+                            msg.To.Add(new MailAddress(recipient_email));
+                        }
+                        EmailReader.Dispose();
+                        EmailReader.Close();
+                    }
+                    conn.Close();
+                }
+                msg.IsBodyHtml = true;
+                mailclient.Host = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
+                mailclient.Port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SMTPPort"]);
+                mailclient.Send(msg);
+            }
+        }
+
+        public bool CheckActive(SqlConnection conn, int period_id)
+        {
+            string select_active_period = "SELECT Period_Status FROM BSC_Period WHERE Period_Status='Active' AND Period_ID<>"+period_id+"";
+            SqlCommand sql_select_active_period = new SqlCommand(select_active_period, conn);
+            using (SqlDataReader ActiveReader = sql_select_active_period.ExecuteReader())
+            {
+                if (ActiveReader.HasRows && DropDownListStatus.SelectedValue == "Active")//jika ada status yang Active. Syaratnya Dropdown yang dipilih harus "Active" juga. Jika tidak, ketika user memilih Inactive, error message-nya tetap muncul
+                {
+                    FailActive.Attributes.Add("style", "margin-bottom:-20px; color:red; font-weight:bold; visibility:visible");
+                    return true;
+                }
+                else
+                {
+                    FailActive.Attributes.Add("style", "margin-bottom:-20px; color:red; font-weight:bold; visibility:hidden");
+                    return false;
+                }
+            }
+        }
+
+
+        protected void OnTextChanged_StartPeriod(object sender, EventArgs e)
+        {
+            var period_id = Request.QueryString["period_id"];
+            int periode = int.Parse(period_id);//agar bisa di Passing By Value
+            string string_start_date = input_start_date.Text, start_date_formatted;
+            int start_year = 0;
+            bool start_year_exist;
+            DateTime start_date;
+            if (!DateTime.TryParse(string_start_date, out start_date))
+            {
+                invalid_start_date.Attributes.Add("style", "margin-top:-25px; color:red; font-weight:bold; visibility:visible");
+            }
+            else
+            {
+                invalid_start_date.Attributes.Add("style", "visibility:hidden; margin-top:-25px");
+                start_date = Convert.ToDateTime(string_start_date);
+                start_date_formatted = start_date.ToString("yyyy");
+                start_year = int.Parse(start_date_formatted);//value TAHUN yang diinput user
+                SqlConnection conn = new SqlConnection(str_connect);
+                conn.Open();
+                start_year_exist = CheckStartYear(start_year, conn, periode);//check Start Year
+                conn.Close();
+            }
+        }
+
+        protected void OnTextChanged_EndPeriod(object sender, EventArgs e)
+        {
+            var period_id = Request.QueryString["period_id"];
+            int periode = int.Parse(period_id);//agar bisa di Passing By Value
+            string string_end_date = input_end_date.Text, string_start_date = input_start_date.Text, end_date_formatted;
+            DateTime start_date;// = Convert.ToDateTime(string_start_date);
+            DateTime end_date;// = Convert.ToDateTime(string_end_date);
+            int end_year = 0, date_diff;
+            bool end_year_exist, end_lessthan_start;
+            if (!DateTime.TryParse(string_end_date, out end_date))
+            {
+                invalid_end_date.Attributes.Add("style", "margin-top:-25px; color:red; font-weight:bold; visibility:visible");
+            }
+            else
+            {
+                invalid_end_date.Attributes.Add("style", "visibility:hidden; margin-top:-25px");
+                start_date = Convert.ToDateTime(string_start_date);
+                end_date = Convert.ToDateTime(string_end_date);
+                end_date_formatted = end_date.ToString("yyyy");
+                end_year = int.Parse(end_date_formatted);//value TAHUN yang diinput user
+
+                date_diff = DateTime.Compare(start_date, end_date);
+                end_lessthan_start = CheckIfEndGreaterThanStart(date_diff);
+
+                SqlConnection conn = new SqlConnection(str_connect);
+                conn.Open();
+                end_year_exist = CheckEndYear(end_year, conn, periode);//check Start Year
+                end_lessthan_start = CheckIfEndGreaterThanStart(date_diff);//check apakah End Period lebih besar dari Start Period
+                conn.Close();
+            }
+        }
+
+        public bool CheckStartYear(int start_year, SqlConnection conn, int period_id) //cek apakah START YEAR Ada atau Tidak
+        {
+            string str_select_start_year = "SELECT Start_Period FROM BSC_Period WHERE DATEPART(yyyy,Start_Period)=" + start_year + " AND Period_ID<>"+period_id+"";
+            SqlCommand sql_select_start_year = new SqlCommand(str_select_start_year, conn);
+            using (SqlDataReader StartDateReader = sql_select_start_year.ExecuteReader())
+            {
+                if (StartDateReader.HasRows)//untuk mengecek apakah TAHUN sudah ada atau belum
+                {
+                    start_year_error_message.Attributes.Add("style", "visibility:visible; margin-bottom:-5px");
+                    return true;
+                }
+                else
+                {
+                    start_year_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px");
+                    return false;
+                }
+            }
+        }
+
+        public bool CheckEndYear(int end_year, SqlConnection conn, int period_id)//cek apakah END YEAR Ada atau Tidak
+        {
+            string str_select_end_year = "SELECT End_Period FROM BSC_Period WHERE DATEPART(yyyy,End_Period)=" + end_year + " AND Period_ID<>"+period_id+"";
+            SqlCommand sql_select_end_year = new SqlCommand(str_select_end_year, conn);
+            using (SqlDataReader EndDateReader = sql_select_end_year.ExecuteReader())
+            {
+                if (EndDateReader.HasRows)//untuk mengecek apakah TAHUN sudah ada atau belum
+                {
+                    end_year_error_message.Attributes.Add("style", "visibility:visible; margin-bottom:-5px");
+                    return true;
+                }
+                else
+                {
+                    end_year_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px");
+                    return false;
+                }
+            }
+        }
+
+        protected void OnStatusChanged(object sender, EventArgs e)
+        {
+            SqlConnection conn = new SqlConnection(str_connect);
+            string string_select_active_status = "SELECT Period_Status FROM BSC_Period WHERE Period_Status='Active'";
+            SqlCommand sql_select_active_status = new SqlCommand(string_select_active_status, conn);
+            conn.Open();
+            using (SqlDataReader ActiveReader = sql_select_active_status.ExecuteReader())
+            {
+                if (ActiveReader.HasRows && DropDownListStatus.SelectedValue == "Active")
+                {
+                    FailActive.Attributes.Add("style", "margin-bottom:-20px; color:red; font-weight:bold; visibility:visible");
+                }
+                else if (ActiveReader.HasRows && DropDownListStatus.SelectedValue == "Inactive")
+                {
+                    FailActive.Attributes.Add("style", "margin-bottom:-20px; color:red; font-weight:bold; visibility:hidden");
+                }
+                ActiveReader.Dispose();
+                ActiveReader.Close();
+            }
+            conn.Close();
+        }
+
+        public bool CheckIfEndGreaterThanStart(int date_diff)
+        {
+            if (date_diff > 0)//<--untuk cek apakah end date lebih kecil dari start date
+            {
+                less_than_error_message.Attributes.Add("style", "visibility:visible; margin-bottom:-5px; margin-top:-5px");
+                return true;
+            }
+            else
+            {
+                less_than_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px");
+                return false;
+            }
+        }
+
+    }
+}

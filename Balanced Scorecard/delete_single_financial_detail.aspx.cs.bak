@@ -1,0 +1,74 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+
+namespace Balanced_Scorecard
+{
+    public partial class delete_single_financial_detail : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["user_name"] == null)
+            {
+                Response.Redirect("~/index.aspx");
+            }
+            var page = Request.QueryString["page"];
+            var detail_id = Request.QueryString["detail_id"];
+            var period_id = Request.QueryString["period_id"];
+            var linked = Request.QueryString["linked"];
+            string detail_name, user_update, date_update;
+            string delete_financial_detail = "";
+            string select_detail_name = "SELECT FinancialMeasure FROM FinancialMeasures_Detail WHERE FinancialDetail_ID=" + detail_id + "";
+            SqlConnection conn = new SqlConnection(str_connect);
+            conn.Open();
+            SqlCommand sql_select_detail_name = new SqlCommand(select_detail_name, conn);
+            detail_name = (string)sql_select_detail_name.ExecuteScalar();
+
+            user_update = Session["user_name"].ToString();
+            date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            if (linked == "0")
+            {
+                delete_financial_detail = "UPDATE FinancialMeasures_Detail SET user_update=@user_update, date_update=@date_update, data_status='deleted' WHERE FinancialDetail_ID=" + detail_id + "";
+                SqlCommand sql_delete_financial_detail = new SqlCommand(delete_financial_detail, conn);
+                sql_delete_financial_detail.Parameters.AddWithValue("@user_update", user_update);
+                sql_delete_financial_detail.Parameters.AddWithValue("@date_update", date_update);
+                sql_delete_financial_detail.ExecuteNonQuery();
+                conn.Close();
+                ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Delete " + detail_name + " Success!'); window.location='" + Request.ApplicationPath + "/financial_scorecard.aspx?page=" + page + "&id=" + period_id + "';", true);
+            }
+            else
+            {
+                StringBuilder sb_linked_items = new StringBuilder();
+                string select_linked_items = "SELECT FinancialMeasure FROM FinancialMeasures_Detail WHERE FinancialLinked=" + linked + " AND data_status='exist'";
+                delete_financial_detail = "UPDATE FinancialMeasures_Detail SET user_update=@user_update, date_update=@date_update, data_status='deleted' WHERE FinancialLinked=" + linked + "";
+                SqlCommand sql_select_linked_items = new SqlCommand(select_linked_items, conn);
+                SqlCommand sql_delete_financial_detail = new SqlCommand(delete_financial_detail, conn);
+
+                using (SqlDataReader LinkedItemReader = sql_select_linked_items.ExecuteReader())
+                {
+                    while(LinkedItemReader.Read())
+                    {
+                        sb_linked_items.Append("\\n - " + LinkedItemReader["FinancialMeasure"] + "");
+                    }
+                    LinkedItemReader.Dispose();
+                    LinkedItemReader.Close();
+                }
+
+                sql_delete_financial_detail.Parameters.AddWithValue("@user_update", user_update);
+                sql_delete_financial_detail.Parameters.AddWithValue("@date_update", date_update);
+                sql_delete_financial_detail.ExecuteNonQuery();
+                conn.Close();
+                ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('Delete: "+sb_linked_items.ToString()+"\\n Success!'); window.location='" + Request.ApplicationPath + "/financial_scorecard.aspx?page=" + page + "&id=" + period_id + "';", true);
+            }
+        }
+    }
+}

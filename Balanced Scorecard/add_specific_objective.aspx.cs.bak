@@ -1,0 +1,828 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Text;
+using System.Configuration;
+using System.Web.UI.HtmlControls;
+using System.Net.Mail;
+
+namespace Balanced_Scorecard
+{
+    public partial class add_specific_objective : System.Web.UI.Page
+    {
+        string str_connect = ConfigurationManager.ConnectionStrings["MyConnection"].ConnectionString;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                ((Label)Master.FindControl("LabelUsername")).Text = Session["user_name"].ToString();
+
+                if (Session["user_name"] == null)
+                {
+                    Response.Redirect("index.aspx");
+                }
+
+                var page = Request.QueryString["page"];
+                var period_id = Request.QueryString["period_id"];
+                var header_id = Request.QueryString["header_id"];
+
+                HtmlAnchor dashboard = (HtmlAnchor)(this.Master).FindControl("hrefDashboard");
+                HtmlAnchor setting = (HtmlAnchor)(this.Master).FindControl("setting");
+                HtmlAnchor approve_request = (HtmlAnchor)(this.Master).FindControl("approve_request");
+                HtmlAnchor request_history = (HtmlAnchor)(this.Master).FindControl("request_history");
+                HtmlAnchor user_management = (HtmlAnchor)(this.Master).FindControl("user_management");
+
+                int start_date_bsc = 0, minus_one_bsc = 0,
+                    current_month = DateTime.Now.Month, reviewable_month = 0,
+                    month_num = 0, month_diff = 0, current_year = DateTime.Now.Year,
+                    year_from_startdate = 0;
+
+                if (Session["user_role"].ToString() == "4")
+                {
+                    dashboard.Attributes.Add("href", "#");
+                    dashboard.Attributes.Add("style", "color:black");
+                    setting.Attributes.Add("data-target", "#");
+                    setting.Attributes.Add("style", "color:black");
+                    approve_request.Attributes.Add("data-target", "#");
+                    approve_request.Attributes.Add("style", "color:black");
+                    request_history.Attributes.Add("data-target", "#");
+                    request_history.Attributes.Add("style", "color:black");
+                    user_management.Attributes.Add("data-target", "#");
+                    user_management.Attributes.Add("style", "color:black");
+                }
+
+                //link breadcrumb
+                individual_scorecard_breadcrumb.Attributes.Add("a href", "individual_scorecard.aspx?page="+page+"&id="+period_id+"");
+
+                //untuk item pada Drop Down Measurement
+                DropDownListMeasurement.Items.Add("%");
+                DropDownListMeasurement.Items.Add("Month");
+                DropDownListMeasurement.Items.Add("Million");
+                DropDownListMeasurement.Items.Add("Numbers");
+
+                //ubah TextBoxTarget menjadi Input Type = "Number"
+                TextBoxTarget.Attributes.Add("type", "number");
+                TextBoxTarget.Attributes.Add("step", "0.01");
+                TextBoxTarget.Attributes.Add("min", "0");
+                TextBoxTarget.Text = "0";
+
+                //Add Item to DropDown Formula
+                DropDownFormula.Items.Add("(Result/Target) x 100");
+                DropDownFormula.Items.Add("100% - ((Result/Target)/Target)");
+                
+                //disabled Result dan Score, karena yang hanya bisa di-input adalah Target & SO
+                TextBoxResult.Attributes.Add("disabled", "true");
+                TextBoxRating.Attributes.Add("disabled", "true");
+
+                cancel_add.Attributes.Add("href", "individual_scorecard.aspx?page=" + page + "&id=" + period_id + "");
+
+                using (SqlConnection conn = new SqlConnection(str_connect))
+                {
+                    string string_select_period = "SELECT * FROM BSC_Period WHERE Period_ID="+period_id+"";
+                    string select_individual_header = "SELECT * FROM IndividualMeasures_Header "
+                                                    + "WHERE IndividualHeader_ID="+header_id+"";
+                    SqlCommand sql_select_period = new SqlCommand(string_select_period, conn);
+                    SqlCommand sql_select_individual_header = new SqlCommand(select_individual_header, conn);
+                    conn.Open();
+                    using (SqlDataReader PeriodReader = sql_select_period.ExecuteReader())
+                    {
+                        if (PeriodReader.HasRows)
+                        {
+                            while (PeriodReader.Read())
+                            {
+                                string start_date_formatted, end_date_formatted;
+                                DateTime start_date = Convert.ToDateTime(PeriodReader["Start_Period"]);
+                                DateTime end_date = Convert.ToDateTime(PeriodReader["End_Period"]);
+                                start_date_formatted = start_date.ToString("MMM,dd-yyyy");
+                                end_date_formatted = end_date.ToString("MMM,dd-yyyy");
+                                LabelStartPeriod.InnerText = start_date_formatted;
+                                LabelEndPeriod.InnerText = end_date_formatted;
+                                start_date_bsc = int.Parse(start_date.ToString("MM"));
+                                year_from_startdate = int.Parse(start_date.ToString("yyyy"));
+                            }
+                        }
+                        else//jika periode tidak ditemukkan / disuntik langsung ke Database
+                        {
+                            LabelStartPeriod.InnerText = "No Period";
+                            LabelEndPeriod.InnerText = "No Period";
+                            SpanDone.Attributes.Add("class", "btn btn-add-group btn-add-group-container add-button disabled");
+                            SpanAddMore.Attributes.Add("class", "btn btn-add-more btn-add-more-container add-button disabled");
+                        }
+                    }
+
+                    if (start_date_bsc == 1)
+                    {
+                        minus_one_bsc = 12;
+                    }
+                    else
+                    {
+                        minus_one_bsc = start_date_bsc - 1;
+                    }
+
+                    string string_select_reviewable_month = "SELECT month_num, reviewable_month FROM ScorecardReview WHERE "
+                                                                                               + "Review_Status='Active' AND Review_Name='" + LabelReview.InnerText + "'";
+                    string string_select_active_review_month = "SELECT Review_Status FROM ScorecardReview WHERE month_num=" + current_month + " "
+                                                              + "AND Review_Status='Active' "
+                                                              + "AND Review_Name='" + LabelReview.InnerText + "'";
+                    SqlCommand sql_select_reviewable_month = new SqlCommand(string_select_reviewable_month, conn);
+                    using (SqlDataReader ReviewableReader = sql_select_reviewable_month.ExecuteReader())
+                    {
+                        while (ReviewableReader.Read())
+                        {
+                            reviewable_month = int.Parse(ReviewableReader["reviewable_month"].ToString());
+                            month_num = int.Parse(ReviewableReader["month_num"].ToString());
+                        }
+                        ReviewableReader.Dispose();
+                        ReviewableReader.Close();
+                    }
+
+                    month_diff = month_num - reviewable_month;
+
+                    if (current_month == start_date_bsc)
+                    {
+                        LabelRequestAdd.Text = "Add";
+                        LabelRequestAdd2.Text = "Add";
+                    }
+                    else if (current_month == minus_one_bsc && current_year == year_from_startdate - 1)
+                    {
+                        LabelRequestAdd.Text = "Add";
+                        LabelRequestAdd2.Text = "Add";
+                    }
+                    else if (current_month >= month_diff && current_month <= month_num)
+                    {
+                        LabelRequestAdd.Text = "Request Add";
+                        LabelRequestAdd2.Text = "Request Add";
+                        SpanDone.Attributes.Add("style", "visibility:hidden");
+                        ButtonAddMore.Text = "Request";
+                        ReasonTextBox.Attributes.Add("style", "visibility:visible; position:relative");
+                        TextAreaReason.Attributes.Add("required", "required");
+                    }
+                    else
+                    {
+                        LabelRequestAdd.Text = "Request Add";
+                        LabelRequestAdd2.Text = "Request Add";
+                        SpanDone.Attributes.Add("style", "visibility:hidden");
+                        ButtonAddMore.Text = "Request";
+                        ReasonTextBox.Attributes.Add("style", "visibility:visible; position:relative");
+                        TextAreaReason.Attributes.Add("required", "required");
+                    }
+
+                    using (SqlDataReader HeaderReader = sql_select_individual_header.ExecuteReader())
+                    {
+                        if (HeaderReader.HasRows)//Error Handling jika ada yang inject langsung
+                        {
+                            while (HeaderReader.Read())
+                            {
+                                LabelKPI.InnerText = HeaderReader["IndividualHeader_KPI"].ToString();
+                                LabelBreadcrumb.Text = HeaderReader["IndividualHeader_KPI"].ToString();
+                                LabelTitle.Text = HeaderReader["IndividualHeader_KPI"].ToString();
+                            }
+                        }
+                        else
+                        {
+                            LabelKPI.InnerText = "KPI Not Found";
+                            LabelBreadcrumb.Text = "Unknown";
+                            LabelTitle.Text = "Unknown";
+                        }
+                    }
+
+                    conn.Close();
+                }
+            }//end of if(!IsPostBack)
+        }
+
+        protected void OnSpecificChanged(object sender, EventArgs e)
+        {
+            var header_id = Request.QueryString["header_id"];
+            string check_specific_objective = "SELECT IndividualDetail_Title FROM IndividualMeasures_Detail "
+                                            + "WHERE IndividualDetail_Title='" + TextBoxSpecificObjective.Text + "' AND data_status='exist' "
+                                            + "AND IndividualHeader_ID=" + header_id + "";
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                conn.Open();
+                SqlCommand check_SO = new SqlCommand(check_specific_objective, conn);
+                using (SqlDataReader SOReader = check_SO.ExecuteReader())
+                {
+                    if (SOReader.HasRows)//jika nama Specific Objective sudah ada
+                    {
+                        specific_objective_error_message.Attributes.Add("style", "visibility:visible; margin-bottom:0px !important; margin-top:5px !important; color:red; font-weight:bold");
+                        SpanAddMore.Attributes.Add("class", "btn btn-add-more-finance btn-add-more-container add-button disabled");
+                        SpanDone.Attributes.Add("class", "btn btn-add-group btn-add-group-container add-button disabled");
+                    }
+                    else
+                    {
+                        specific_objective_error_message.Attributes.Add("style", "visibility:hidden; margin-bottom:-20px !important; margin-top:5px !important; color:red; font-weight:bold");
+                        SpanAddMore.Attributes.Add("class", "btn btn-add-more-finance btn-add-more-container add-button");
+                        SpanDone.Attributes.Add("class", "btn btn-add-group btn-add-group-container add-button");
+                    }
+                }
+                conn.Close();
+            }
+        }
+
+        protected void OnClickAddMore(object sender, EventArgs e)
+        {
+            var page = Request.QueryString["page"];
+            var period_id = Request.QueryString["period_id"];
+            var header_id = Request.QueryString["header_id"];
+            float total_header_score, sum_individual_rating, count_individual_rating_data_by_header;
+            float total_rating = 0;
+            int last_insert_request_id = 0;
+            bool SO_exist;
+            string user_create, date_create, user_update, date_update, superior_id, individual_header;
+            string select_individual_header = "SELECT IndividualHeader_KPI FROM IndividualMeasures_Header "
+                                            + "WHERE IndividualHeader_ID=" + header_id + "";
+            string string_insert_individual_detail_request = "INSERT INTO IndividualDetail_RequestChange VALUES(@title, @target, @result, "
+                                                           + "@measure_by, @rating, @formula, 'pending', NULL, @date_create, @user_create, NULL,NULL, @period_id, "
+                                                           + "@superior_id, @user_id, @reason, 2)";
+            string string_insert_individual_detail_history = "INSERT INTO IndividualDetailHistory VALUES(NULL, @header_id, @title, @target, @result, "
+                                                           + "@measure_by, @rating, @formula, @user_create, @date_create, @user_update, @date_update, "
+                                                           + "@request_id, @period_id, @header_kpi)";
+            string string_get_superior_id = "SELECT Superior_ID FROM ScorecardUser WHERE user_id=" + Session["user_id"].ToString() + "";
+            string string_get_last_request_id = "SELECT TOP(1) IndividualDetailRequest_ID "
+                                              + "FROM IndividualDetail_RequestChange ORDER BY IndividualDetailRequest_ID DESC";
+            string check_specific_objective = "SELECT IndividualDetail_Title FROM IndividualMeasures_Detail "
+                                            + "WHERE IndividualDetail_Title='" + TextBoxSpecificObjective.Text + "' AND data_status='exist' "
+                                            + "AND IndividualHeader_ID=" + header_id + "";
+            string insert_specific_objective = "INSERT INTO IndividualMeasures_Detail VALUES(@header_id, @title, @target, @result, "
+                                             + "@measure, ROUND(@rating,2), @user_create, @user_update, @formula, @data_status, "
+                                             + "@date_create, @date_update)";
+            string sum_detail_rating = "SELECT SUM(IndividualDetail_Rating) FROM IndividualMeasures_Detail "
+                                     + "WHERE IndividualHeader_ID=" + header_id + " AND data_status='exist'";
+            string count_individual_rating = "SELECT COUNT(*) FROM IndividualMeasures_Detail WHERE "
+                                           + "IndividualHeader_ID=" + header_id + " AND data_status='exist'";
+            string header_total_score = "UPDATE IndividualMeasures_Header SET IndividualHeader_Rating=ROUND(@total_header_score,2), "
+                                      + "IndividualHeader_Score=ROUND((@total_header_score*(IndividualHeader_Weight/100)),2), "
+                                      + "user_update=@user_update, date_update=@date_update WHERE IndividualHeader_ID=" + header_id + "";
+
+            //untuk PERHITUNGAN
+            if (DropDownFormula.SelectedValue == "(Result/Target) x 100")
+            {
+                if (TextBoxResult.Value == "0" && TextBoxTarget.Text == "0")
+                {
+                    total_rating = 0;//untuk handle jika ada jawaban yang UNLIMITED
+                }
+                else
+                {
+                    total_rating = float.Parse(TextBoxResult.Value) / float.Parse(TextBoxTarget.Text);
+                }
+            }
+            else if (DropDownFormula.SelectedValue == "100% - ((Result/Target)/Target)")
+            {
+                if (TextBoxResult.Value == "0" && TextBoxTarget.Text == "0")
+                {
+                    total_rating = 0;//untuk handle jika ada jawaban yang UNLIMITED
+                }
+                else
+                {
+                    total_rating = 100 - (((float.Parse(TextBoxResult.Value) / float.Parse(TextBoxTarget.Text)) / float.Parse(TextBoxTarget.Text))*100);
+                }
+            }
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                SqlCommand check_SO = new SqlCommand(check_specific_objective, conn);
+                SqlCommand sql_insert_specific_objective = new SqlCommand(insert_specific_objective, conn);
+                SqlCommand sql_insert_new_specific_objective_request = new SqlCommand(string_insert_individual_detail_request, conn);
+                SqlCommand sql_insert_specific_objective_history = new SqlCommand(string_insert_individual_detail_history, conn);
+                SqlCommand sql_get_superior_id = new SqlCommand(string_get_superior_id, conn);
+                SqlCommand sql_get_last_req_id = new SqlCommand(string_get_last_request_id, conn);
+                SqlCommand sql_sum_individual_rating = new SqlCommand(sum_detail_rating, conn);
+                SqlCommand sql_count_individual_rating = new SqlCommand(count_individual_rating, conn);
+                SqlCommand sql_update_header = new SqlCommand(header_total_score, conn);
+                SqlCommand sql_get_individual_header = new SqlCommand(select_individual_header, conn);
+                conn.Open();
+
+                using (SqlDataReader SOReader = check_SO.ExecuteReader())
+                {
+                    if (SOReader.HasRows)//jika nama KPI sudah ada
+                    {
+                        specific_objective_error_message.Attributes.Add("style", "visibility:visible; margin-bottom:0px !important; margin-top:5px !important; color:red; font-weight:bold");
+                        SO_exist = true;
+                    }
+                    else
+                    {
+                        SO_exist = false;
+                    }
+                }
+
+                individual_header = (string)sql_get_individual_header.ExecuteScalar();
+                superior_id = (string)sql_get_superior_id.ExecuteScalar();
+                user_create = Session["user_name"].ToString();
+                user_update = Session["user_name"].ToString();
+                date_create = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+                if (SO_exist == false)//jika Specific Objective tidak ditemukan
+                {
+                    if (ButtonAddMore.Text == "Add More")
+                    {
+                        sql_insert_specific_objective.Parameters.AddWithValue("@header_id", header_id);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@title", TextBoxSpecificObjective.Text);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@target", Math.Round(Convert.ToDouble(TextBoxTarget.Text),2));
+                        sql_insert_specific_objective.Parameters.AddWithValue("@result", Math.Round(Convert.ToDouble(TextBoxResult.Value), 2));
+                        sql_insert_specific_objective.Parameters.AddWithValue("@measure", DropDownListMeasurement.SelectedValue);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@rating", total_rating);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@user_create", user_create);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@date_create", date_create);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@user_update", user_update);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@date_update", date_update);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@formula", DropDownFormula.SelectedValue);
+                        sql_insert_specific_objective.Parameters.AddWithValue("@data_status", "exist");
+
+                        sql_insert_specific_objective.ExecuteNonQuery();//insert Specific Objective
+
+                        //untuk meng-update Header-nya
+                        sum_individual_rating = float.Parse(sql_sum_individual_rating.ExecuteScalar().ToString());
+                        count_individual_rating_data_by_header = float.Parse(sql_count_individual_rating.ExecuteScalar().ToString());
+                        total_header_score = sum_individual_rating / count_individual_rating_data_by_header;
+
+                        sql_update_header.Parameters.AddWithValue("@total_header_score", total_header_score);//untuk mengupdate header
+                        sql_update_header.Parameters.AddWithValue("@user_update", user_update);
+                        sql_update_header.Parameters.AddWithValue("@date_update", date_update);
+
+                        sql_update_header.ExecuteNonQuery();//update Header
+
+                        ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('New Specific Objective Added!'); window.location='" + "add_specific_objective.aspx?page=" + page + "&period_id=" + period_id + "&header_id=" + header_id + "';", true);
+                    }
+                    else if (ButtonAddMore.Text == "Request")
+                    {
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@title", TextBoxSpecificObjective.Text);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@target", Math.Round(Convert.ToDouble(TextBoxTarget.Text), 2));
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@result", Math.Round(Convert.ToDouble(TextBoxResult.Value), 2));
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@measure_by", DropDownListMeasurement.SelectedValue);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@rating", total_rating);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@formula", DropDownFormula.SelectedValue);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@date_create", date_create);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@user_create", user_create);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@period_id", period_id);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@superior_id", superior_id);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@user_id", Session["user_id"]);
+                        sql_insert_new_specific_objective_request.Parameters.AddWithValue("@reason", TextAreaReason.InnerText);
+                        sql_insert_new_specific_objective_request.ExecuteNonQuery();
+
+                        last_insert_request_id = (int)sql_get_last_req_id.ExecuteScalar();
+
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@header_id", header_id);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@title", TextBoxSpecificObjective.Text);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@target", Math.Round(Convert.ToDouble(TextBoxTarget.Text), 2));
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@result", Math.Round(Convert.ToDouble(TextBoxResult.Value), 2));
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@measure_by", DropDownListMeasurement.SelectedValue);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@rating", total_rating);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@formula", DropDownFormula.SelectedValue);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@user_create", user_create);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@date_create", date_create);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@user_update", user_update);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@date_update", date_update);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@request_id", last_insert_request_id);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@period_id", period_id);
+                        sql_insert_specific_objective_history.Parameters.AddWithValue("@header_kpi", individual_header);
+                        sql_insert_specific_objective_history.ExecuteNonQuery();
+
+                        sendMail(last_insert_request_id);
+                        ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('You request has been sent. Please wait for the approval.'); window.location='" + "individual_scorecard.aspx?page=" + page + "&id=" + period_id + "';", true);
+                    }
+                }
+                conn.Close();
+            }
+        }
+
+        public void sendMail(int request_id)
+        {
+            var period_id = Request.QueryString["period_id"];
+            var header_id = Request.QueryString["header_id"];
+
+            string superior_email = "";
+            string string_get_superior_email = "with SuperiorInfo(Superior_ID) AS "
+                                             + "( SELECT su.Superior_ID FROM ScorecardUser su WHERE su.user_id=" + Session["user_id"].ToString() + " ) "
+                                             + "SELECT empEmail FROM ScorecardUser WHERE ScorecardUser.EmpId "
+                                             + "= (SELECT Superior_ID FROM SuperiorInfo)";
+            string string_get_user_info = "SELECT ScorecardUser.EmpId, empName, empOrg, OrgAdtGroupName, empJobTitle, LOWER(empEmail) as Email, "
+                                        + "empGrade, Group_Name, IndividualHeader_KPI, FinancialHeader_StretchRating "
+                                        + "FROM [Balanced Scorecard].dbo.ScorecardUser "
+                                        + "join [Human_Capital_demo].dbo.OrgAdtGroup on ScorecardUser.empOrgAdtGroupCode=OrgAdtGroup.OrgAdtCode "
+                                        + "join ScorecardGroupLink (nolock) on ScorecardGroupLink.OrgAdtGroupCode = ScorecardUser.empOrgAdtGroupCode "
+                                        + "join BSC_Period on ScorecardGroupLink.Period_ID = BSC_Period.Period_ID and BSC_period.Period_ID=" + period_id + " "
+                                        + "join IndividualMeasures_Header on ScorecardUser.user_id = IndividualMeasures_Header.user_id "
+                                        + "join FinancialMeasures_Header ON FinancialMeasures_Header.FinancialHeader_Group = ScorecardGroupLink.Group_Name "
+                                        + "WHERE IndividualHeader_ID=" + header_id + " AND FinancialMeasures_Header.Period_ID=" + period_id + "";
+            string string_get_new_specific_objective = "SELECT * FROM IndividualDetail_RequestChange WHERE IndividualDetailRequest_ID=" + request_id + "";
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                conn.Open();
+                SqlCommand sql_get_user_info = new SqlCommand(string_get_user_info, conn);
+                SqlCommand sql_get_new_specific_objective = new SqlCommand(string_get_new_specific_objective, conn);
+
+                StringBuilder sb_subject = new StringBuilder();
+                StringBuilder sb_body_introduction = new StringBuilder();
+                StringBuilder sb_from_email = new StringBuilder();
+                StringBuilder sb_current_detail = new StringBuilder();
+                StringBuilder sb_new_detail = new StringBuilder();
+                StringBuilder sb_conclusion = new StringBuilder();
+
+                using (SqlDataReader UserReader = sql_get_user_info.ExecuteReader())
+                {
+                    while (UserReader.Read())
+                    {
+                        sb_from_email.Append(UserReader["Email"].ToString());
+                        sb_subject.Append("Request for Add New KPI's Specific Objective (" + UserReader["empName"].ToString() + " - " + UserReader["EmpId"].ToString() + ")");
+                        sb_body_introduction.Append("Hello, my name is <b>" + UserReader["empName"].ToString() + "</b> and this is my information: <br/>"
+                                + "<b>NIK / <i>Barcode</i></b> : " + UserReader["EmpId"].ToString() + "<br/>"
+                                + "<b>Group</b> : " + UserReader["Group_Name"].ToString() + " (Stretch Rating: " + UserReader["FinancialHeader_StretchRating"].ToString() + "%)<br/>"
+                                + "<b>Organization</b> : " + UserReader["empOrg"].ToString() + "<br/>"
+                                + "<b>Additional Group</b> : " + UserReader["OrgAdtGroupName"].ToString() + "<br/>"
+                                + "<b>Job Title</b> : " + UserReader["empJobTitle"].ToString() + "<br/>"
+                                + "<b>Grade</b> : " + UserReader["empGrade"].ToString() + "<br/><br/>"
+                                + "I would like to add new the following Specific Objective to my " + UserReader["IndividualHeader_KPI"].ToString() + " KPI:<br/><br/>");
+                        sb_conclusion.Append("Link to Balanced Scorecard Application: http://localhost:1401/index.aspx <br/>Thank you. <br/><br/>Best Regards, <br/><b>" + UserReader["empName"].ToString() + "</b>");
+                    }
+                    UserReader.Dispose();
+                    UserReader.Close();
+                }
+
+                using (SqlDataReader NewReader = sql_get_new_specific_objective.ExecuteReader())
+                {
+                    while (NewReader.Read())
+                    {
+                        if (NewReader["IndividualDetail_MeasureBy"].ToString() == "Month")
+                        {
+                            string month_name_target, month_name_result;
+                            month_name_target = ShowMonthNameTarget(int.Parse(NewReader["IndividualDetail_Target"].ToString()));
+                            month_name_result = ShowMonthNameResult(int.Parse(NewReader["IndividualDetail_Result"].ToString()));
+                            sb_new_detail.Append("<table style='border:1px solid black; border-collapse:collapse'>"
+                                            + "<tr>"
+                                            + "<th style='border:1px solid black; padding:8px'>Spec. Objective</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Target</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Result</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Formula</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Rating</th>"
+                                            + "</tr>"
+                                            + "<tr>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Title"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + month_name_target + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + month_name_result + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Formula"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Rating"].ToString() + "%</td>"
+                                            + "</tr>"
+                                            + "</table>with <b>reason</b>: " + NewReader["IndividualDetailReason"].ToString() + "<br/><br/>");
+                        }
+                        else if (NewReader["IndividualDetail_MeasureBy"].ToString() == "Numbers")
+                        {
+                            sb_new_detail.Append("<table style='border:1px solid black; border-collapse:collapse'>"
+                                            + "<tr>"
+                                            + "<th style='border:1px solid black; padding:8px'>Spec. Objective</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Target</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Result</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Formula</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Rating</th>"
+                                            + "</tr>"
+                                            + "<tr>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Title"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Target"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Result"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Formula"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Rating"].ToString() + "%</td>"
+                                            + "</tr>"
+                                            + "</table>with <b>reason</b>: " + NewReader["IndividualDetailReason"].ToString() + "<br/><br/>");
+                        }
+                        else
+                        {
+                            sb_new_detail.Append("<table style='border:1px solid black; border-collapse:collapse'>"
+                                            + "<tr>"
+                                            + "<th style='border:1px solid black; padding:8px'>Spec. Objective</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Target</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Result</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Formula</th>"
+                                            + "<th style='border:1px solid black; padding:8px'>Rating</th>"
+                                            + "</tr>"
+                                            + "<tr>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Title"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Target"].ToString() + " " + NewReader["IndividualDetail_MeasureBy"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Result"].ToString() + " " + NewReader["IndividualDetail_MeasureBy"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Formula"].ToString() + "</td>"
+                                            + "<td style='border:1px solid black; padding:8px'>" + NewReader["IndividualDetail_Rating"].ToString() + "%</td>"
+                                            + "</tr>"
+                                            + "</table>with <b>reason</b>: " + NewReader["IndividualDetailReason"].ToString() + "<br/><br/>");
+                        }
+                    }
+                    NewReader.Dispose();
+                    NewReader.Close();
+                }
+
+                SqlCommand sql_get_email_superior = new SqlCommand(string_get_superior_email, conn);
+                using (SqlDataReader SuperiorReader = sql_get_email_superior.ExecuteReader())
+                {
+                    if (SuperiorReader.HasRows)
+                    {
+                        while (SuperiorReader.Read())
+                        {
+                            superior_email = SuperiorReader["empEmail"].ToString();
+                        }
+                    }
+                    SuperiorReader.Dispose();
+                    SuperiorReader.Close();
+                }
+
+                SmtpClient mailclient = new SmtpClient();  //Karena FILE_LOCATION terjadi perubahan setiap di-klik, maka
+                using (MailMessage msg = new MailMessage())//harus pake USING untuk CLEAR semua Resource yang pernah dipake
+                {
+                    /******************** SEND Email TO Users **************************************/
+                    msg.Subject = sb_subject.ToString();
+                    msg.Body = sb_body_introduction.ToString() + sb_new_detail.ToString() + sb_conclusion.ToString();
+                    if (sb_from_email.ToString() == "")
+                    {
+                        msg.From = new MailAddress("message@error.com");
+                    }
+                    else
+                    {
+                        msg.From = new MailAddress(sb_from_email.ToString());
+                    }
+
+                    if (superior_email == "")
+                    {
+                        msg.To.Add("message@error.com");//<-- E-Mail atasan
+                    }
+                    else
+                    {
+                        msg.To.Add(superior_email);//<-- E-Mail atasan
+                    }
+                    msg.IsBodyHtml = true;
+                    mailclient.Host = System.Configuration.ConfigurationManager.AppSettings["SMTPServer"];
+                    mailclient.Port = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SMTPPort"]);
+                    mailclient.Send(msg);
+                }
+                conn.Close();
+            }
+        }
+
+        public string ShowMonthNameTarget(int target_value)
+        {
+            string month_name = "";
+            switch (target_value)
+            {
+                case 1:
+                    month_name = "January"; break;
+                case 2:
+                    month_name = "February"; break;
+                case 3:
+                    month_name = "March"; break;
+                case 4:
+                    month_name = "April"; break;
+                case 5:
+                    month_name = "May"; break;
+                case 6:
+                    month_name = "June"; break;
+                case 7:
+                    month_name = "July"; break;
+                case 8:
+                    month_name = "August"; break;
+                case 9:
+                    month_name = "September"; break;
+                case 10:
+                    month_name = "October"; break;
+                case 11:
+                    month_name = "November"; break;
+                case 12:
+                    month_name = "December"; break;
+            }
+            return month_name;
+        }
+
+        public string ShowMonthNameResult(int result_value)
+        {
+            string month_name = "";
+            switch (result_value)
+            {
+                case 0:
+                    month_name = "-"; break;
+                case 1:
+                    month_name = "January"; break;
+                case 2:
+                    month_name = "February"; break;
+                case 3:
+                    month_name = "March"; break;
+                case 4:
+                    month_name = "April"; break;
+                case 5:
+                    month_name = "May"; break;
+                case 6:
+                    month_name = "June"; break;
+                case 7:
+                    month_name = "July"; break;
+                case 8:
+                    month_name = "August"; break;
+                case 9:
+                    month_name = "September"; break;
+                case 10:
+                    month_name = "October"; break;
+                case 11:
+                    month_name = "November"; break;
+                case 12:
+                    month_name = "December"; break;
+            }
+            return month_name;
+        }
+
+        protected void OnClickDone(object sender, EventArgs e)
+        {
+            var page = Request.QueryString["page"];
+            var period_id = Request.QueryString["period_id"];
+            var header_id = Request.QueryString["header_id"];
+            float total_header_score, sum_individual_rating, count_individual_rating_data_by_header;
+            float total_rating = 0;
+            bool SO_exist;
+            string user_create, date_create, user_update, date_update;
+            string check_specific_objective = "SELECT IndividualDetail_Title FROM IndividualMeasures_Detail WHERE IndividualDetail_Title='" + TextBoxSpecificObjective.Text + "' AND data_status='exist'";
+            string insert_specific_objective = "INSERT INTO IndividualMeasures_Detail VALUES(@header_id, @title, @target, @result, @measure, ROUND(@rating,2), @user_create, @user_update, @formula, @data_status, @date_create, @date_update)";
+            string sum_detail_rating = "SELECT SUM(IndividualDetail_Rating) FROM IndividualMeasures_Detail WHERE IndividualHeader_ID=" + header_id + " AND data_status='exist'";
+            string count_individual_rating = "SELECT COUNT(*) FROM IndividualMeasures_Detail WHERE IndividualHeader_ID=" + header_id + " AND data_status='exist'";
+            string header_total_score = "UPDATE IndividualMeasures_Header SET IndividualHeader_Rating=ROUND(@total_header_score,2), IndividualHeader_Score=ROUND((@total_header_score*(IndividualHeader_Weight/100)),2) WHERE IndividualHeader_ID=" + header_id + "";
+
+            //untuk PERHITUNGAN
+            if (DropDownFormula.SelectedValue == "(Result/Target) x 100")
+            {
+                if (TextBoxResult.Value == "0" && TextBoxTarget.Text == "0")
+                {
+                    total_rating = 0;//untuk handle jika ada jawaban yang UNLIMITED
+                }
+                else
+                {
+                    total_rating = float.Parse(TextBoxResult.Value) / float.Parse(TextBoxTarget.Text);
+                }
+            }
+            else if (DropDownFormula.SelectedValue == "100% - ((Result/Target)/Target)")
+            {
+                if (TextBoxResult.Value == "0" && TextBoxTarget.Text == "0")
+                {
+                    total_rating = 0;//untuk handle jika ada jawaban yang UNLIMITED
+                }
+                else
+                {
+                    total_rating = 100 - (((float.Parse(TextBoxResult.Value) / float.Parse(TextBoxTarget.Text)) / float.Parse(TextBoxTarget.Text))*100);
+                }
+            }
+
+            using (SqlConnection conn = new SqlConnection(str_connect))
+            {
+                SqlCommand check_SO = new SqlCommand(check_specific_objective, conn);
+                SqlCommand sql_insert_specific_objective = new SqlCommand(insert_specific_objective, conn);
+                SqlCommand sql_sum_individual_rating = new SqlCommand(sum_detail_rating, conn);
+                SqlCommand sql_count_individual_rating = new SqlCommand(count_individual_rating, conn);
+                SqlCommand sql_update_header = new SqlCommand(header_total_score, conn);
+                conn.Open();
+
+                user_create = Session["user_name"].ToString();
+                user_update = Session["user_name"].ToString();
+                date_create = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+                date_update = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+                using (SqlDataReader SOReader = check_SO.ExecuteReader())
+                {
+                    if (SOReader.HasRows)//jika nama KPI sudah ada
+                    {
+                        specific_objective_error_message.Attributes.Add("style", "visibility:visible; margin-bottom:0px !important; margin-top:5px !important; color:red; font-weight:bold");
+                        SO_exist = true;//jika SO ditemukan
+                    }
+                    else
+                    {
+                        SO_exist = false;
+                    }
+                }
+
+                if (SO_exist == false)//jika SO tidak ditemukan
+                {
+                    sql_insert_specific_objective.Parameters.AddWithValue("@header_id", header_id);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@title", TextBoxSpecificObjective.Text);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@target", TextBoxTarget.Text);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@result", TextBoxResult.Value);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@measure", DropDownListMeasurement.SelectedValue);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@rating", total_rating);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@user_create", user_create);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@date_create", date_create);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@user_update", user_update);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@date_update", date_update);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@formula", DropDownFormula.SelectedValue);
+                    sql_insert_specific_objective.Parameters.AddWithValue("@data_status", "exist");
+
+                    sql_insert_specific_objective.ExecuteNonQuery();//insert Specific Objective
+
+                    //untuk meng-update Header-nya
+                    sum_individual_rating = float.Parse(sql_sum_individual_rating.ExecuteScalar().ToString());
+                    count_individual_rating_data_by_header = float.Parse(sql_count_individual_rating.ExecuteScalar().ToString());
+                    total_header_score = sum_individual_rating / count_individual_rating_data_by_header;
+
+                    sql_update_header.Parameters.AddWithValue("@total_header_score", total_header_score);//untuk mengupdate header
+
+                    sql_update_header.ExecuteNonQuery();//update Header
+
+                    ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "redirect", "alert('New Specific Objective Added!'); window.location='" + Request.ApplicationPath + "/individual_scorecard.aspx?page="+page+"&id=" + period_id + "';", true);
+                }
+                conn.Close();
+            }
+        }
+
+        protected void OnTargetChanged(object sender, EventArgs e)
+        {
+            if (DropDownListMeasurement.SelectedValue == "Month")
+            {
+                int target_value = int.Parse(TextBoxTarget.Text);
+                string month_name;
+                check_target_value.Attributes.Add("style", "width:300px; color:black; visibility:visible; padding-bottom:20px; margin-top:3px");
+                if (target_value > 12)
+                {
+                    TextBoxTarget.Text = "12";
+                    check_target_value.InnerText = "December";
+                }
+                else if (target_value < 1)
+                {
+                    TextBoxTarget.Text = "1";
+                    check_target_value.InnerText = "January";
+                }
+                else
+                {
+                    month_name = ShowMonthName(target_value);
+                    check_target_value.InnerText = month_name;
+                }
+            }
+            else
+            {
+                check_target_value.Attributes.Add("style", "width:300px; visibility:hidden; padding-bottom:0px; margin-top:0px");
+            }
+        }
+
+        protected void OnSelectMeasureBy(object sender, EventArgs e)
+        {
+            if (DropDownListMeasurement.SelectedValue == "Month")
+            {
+                int target_value = int.Parse(TextBoxTarget.Text);
+                string month_name;
+                check_target_value.Attributes.Add("style", "width:300px; color:black; visibility:visible; padding-bottom:20px; margin-top:3px");
+                TextBoxTarget.Attributes.Add("max", "12");
+                TextBoxTarget.Attributes.Add("min", "1");
+                TextBoxTarget.Attributes.Add("step", "1");
+                if (target_value > 12)
+                {
+                    TextBoxTarget.Text = "12";
+                    check_target_value.InnerText = "December";
+                }
+                else if (target_value < 1)
+                {
+                    TextBoxTarget.Text = "1";
+                    check_target_value.InnerText = "January";
+                }
+                else
+                {
+                    month_name = ShowMonthName(target_value);
+                    check_target_value.InnerText = month_name;
+                }
+                ScriptManager.RegisterClientScriptBlock(this, this.GetType(), "alertMessage", "alert('Maximum Target value for measure by month is 12 and minimum value is 1')", true);
+            }
+            else
+            {
+                check_target_value.Attributes.Add("style", "width:300px; visibility:hidden; padding-bottom:0px; margin-top:0px");
+                TextBoxTarget.Attributes.Remove("max");
+                TextBoxTarget.Attributes.Add("min", "0");
+                TextBoxTarget.Attributes.Add("step", "0.01");
+            }
+        }
+
+        public string ShowMonthName(int target_value)
+        {
+            string month_name = "";
+            switch (target_value)
+            {
+                case 1:
+                    month_name = "January"; break;
+                case 2:
+                    month_name = "February"; break;
+                case 3:
+                    month_name = "March"; break;
+                case 4:
+                    month_name = "April"; break;
+                case 5:
+                    month_name = "May"; break;
+                case 6:
+                    month_name = "June"; break;
+                case 7:
+                    month_name = "July"; break;
+                case 8:
+                    month_name = "August"; break;
+                case 9:
+                    month_name = "September"; break;
+                case 10:
+                    month_name = "October"; break;
+                case 11:
+                    month_name = "November"; break;
+                case 12:
+                    month_name = "December"; break;
+            }
+            return month_name;
+        }
+    }
+}
