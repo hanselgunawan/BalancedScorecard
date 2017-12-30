@@ -30,3 +30,7 @@ Balanced Scorecard Web App is an internal application of [PT. Matahari Putra Pri
 
 ## Demo
 [See Demo](https://www.youtube.com/watch?v=LUEFIHJvKUs)
+
+## Contact Me
+* E-mail: hanselgunawan94@gmail.com
+* LinkedIn: https://www.linkedin.com/in/hanselbtritama
